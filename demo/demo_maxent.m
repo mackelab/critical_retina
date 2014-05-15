@@ -43,6 +43,7 @@ fitoptions.MaxIter=3000;
 %model:
 [logPtrue,logZtrue,Ptrue, means_true]=PMaxEnt(features,lambda);
 
+
 %now, generate synthetic data from this distribution:
 features_sampled=SampleDiscrete(features,Ptrue,max(Ns));
 
@@ -50,7 +51,6 @@ features_sampled=SampleDiscrete(features,Ptrue,max(Ns));
 %procedure:
 means_sampled=mean(features_sampled,1); clear featuressampled
                     
- 
  
  [lambda_learned,logZlearned, Plearned, means_learned,output]=FitMaxEntLinear(features,means_sampled, fitoptions);
  Plearned=exp(Plearned);
@@ -91,10 +91,28 @@ Plearned_hJ_check=qIsing(x,h_learned,J_learned,exp(logZlearned));
  
  
  %% We also have a function which does the bookkeeping internally, i.e. for whcih we never get to see the features: 
- 
- 
- 
- 
- 
- 
- 
+
+ [meano,covo]=MeanCov2Features(means_sampled)
+ means_check=MeanCov2Features(meano,covo);
+ [covo_check,meano_check]=wcov(AllStates(10),Plearned);
+
+[h_checko,J_checko,logZ,logP, patterns]=FitIsingModel(meano,covo);
+
+%%
+figure
+subplot(2,2,1)
+plot(means_sampled,means_check,'.')
+eqline
+xlabel('Input features')
+ylabel('features after converting twice')
+
+subplot(2,2,2)
+plot(h,h_checko,'.')
+hold on
+plot(J,J_checko,'g.')
+
+eqline
+xlabel('h J of first function')
+ylabel('h J of second function')
+
+

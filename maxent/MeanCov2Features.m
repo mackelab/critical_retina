@@ -6,7 +6,7 @@ if nargin==2 && nargout==1
     %first all mean entries, and then the upper diagonal of all second
     %moments, i.e. covariances with mean product added back in
     Moments=Sigma+mu'*mu;
-    gs=[mu(:),vec(Moments(triu(ones(numel(mu)))==1))'];
+    gs=[mu(:)',vec(Moments(tril(ones(numel(mu)),-1)==1))'];
     
 elseif nargin==1 && nargout==2 %work in opposite direction
     gs=mu;
@@ -24,3 +24,5 @@ elseif nargin==1 && nargout==2 %work in opposite direction
         out2=Sigma;
     end
 end
+
+%keyboard

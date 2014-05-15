@@ -32,16 +32,12 @@ d=numel(mu);
 [features,description,patterns]=SetupFeaturesMaxEnt(d,2);
 
 
-%calculate mean of second order features, i.e. second order
-%correlation matrix
-triup=triu(ones(size(Cov)),1)==1;
-E2=Cov+mu(:)*mu(:)';
-
-pairmeans=E2(triup);
+means=MeanCov2Features(mu,Cov);
+ 
 
 %get overall feature expecations by concatenating means and upper triangle
 %of correlation matrix:
-means=[mu(:);pairmeans]';
+%means=[mu(:);pairmeans]';
 
 %use general purpose function "FitMaxEntLinear" to learn parameters:
 fitoptions.TolX=1e-20;
@@ -50,4 +46,4 @@ fitoptions.display='off';
 [lambda,logZ, logP, junk,junk2]=FitMaxEntLinear(features,means, fitoptions);
 
 %now, extract h and J from the weights lambda:
-[h,J]=hJ2lambda(lamdba);
+[h,J]=hJ2lambda(lambda);
