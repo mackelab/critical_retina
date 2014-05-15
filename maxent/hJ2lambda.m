@@ -8,14 +8,14 @@ if nargin==2 && nargout==1
     J=2*J';
     lambda=[h(:);vec(J(tril(ones(numel(h)),-1)==1))];
 %    keyboard
-elseif nargout==1 && nargout==2 %work in opposite direction, i.e. convert lambda to h and J
+elseif nargin==1 && nargout==2 %work in opposite direction, i.e. convert lambda to h and J
     lambda=h;
-    dimo=-1+sqrt(1+4*numel(lambda));
-    if rem(dimo,1)<1e-10
+    dimo=(-1+sqrt(1+8*numel(lambda)))/2;
+    if abs(rem(dimo,1))>1e-10
         error('number of dimensions does not make sense')
     else
         h=lambda(1:dimo);
-        Jzeros(dimo);
+        J=zeros(dimo);
         J(tril(ones(dimo),-1)==1)=lambda(dimo+1:end);
         J=J';
         %Sigma=Sigma+Sigma';

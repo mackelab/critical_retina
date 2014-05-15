@@ -7,22 +7,26 @@ if numel(x)==1
     %use standard ordering for x, assuming a second order Ising model:
     %dimo=dimo=-1+sqrt(1+4*numel(lambda));
     [x]=SetupFeaturesMaxEnt(dimo,2);
-   % keyboard
+    % keyboard
+end
+
+if nargin==3
+    logit=true;
 end
 
 logQ=full(x*lambda);
 
 if nargin==2
-logZ=logsumexp(logQ);
+    logZ=logsumexp(logQ);
 end
 
 logP=logQ-logZ;
 
 
 if nargout>=3
-P=exp(logP);
-SumP=sum(P);
-P=P/SumP;
+    P=exp(logP);
+    SumP=sum(P);
+    P=P/SumP;
 end
 
 if nargout==4

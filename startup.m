@@ -6,6 +6,8 @@ addpath([pwd,'/maxent_MCMC'])
 addpath([pwd,'/dich_gauss'])
 addpath([pwd,'/flat_models'])
 addpath([pwd,'/util'])
+addpath([pwd,'/util/minFunc'])
+
 
 %compile C_Code  if neceessary
 if 1
