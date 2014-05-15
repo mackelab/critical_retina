@@ -1,4 +1,4 @@
-function P=flat_dg_count_distrib_asymp(gamma,lambda,k,n,intsteps, logit)
+function P=FlatDGprobs(gamma,lambda,k,n,intsteps, logit)
 
 
 %keyboard

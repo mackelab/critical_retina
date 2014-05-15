@@ -1,5 +1,6 @@
-function P=flat_dg_count_distrib_asymp(gamma,lambda,k,n,intsteps, logit)
-
+function P=flat_dg_count_distrib(gamma,lambda,k,n,intsteps, logit)
+%spike count distribution of flat dg model with gaussian mean gamma,
+%gaussian correlation lambda, and evaluate for k out of n neurons
 
 %keyboard
 if nargin==4

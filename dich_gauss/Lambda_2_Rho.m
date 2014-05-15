@@ -1,18 +1,16 @@
-function [mu, Rho]=Lambda2Rho(gamma, Lambda)
-%given latent gaussian, find mean and variance of resulting binary rvs
+function [r, rho, c]=LambdaToRho(gamma, lambda)
+%convert between moments of latent gaussian (gamma, rho), and mean,
+%correlation and covariance of the resulting binary
 
-variances=diag(Lambda);
-gamma=gamma./sqrt(variances);
-Lambda=cov_2_corr(Lambda);
+r=normcdf(gamma(1));
+r(2)=normcdf(gamma(end));
+%c=bivnor(gamma(1),gamma(end),lambda)-(r(1)*r(end));
 
-mu=normcdf(gamma);
+c=mvncdf([0;0], -[gamma(1); gamma(end)], [1, lambda; lambda, 1])-r(1)*r(end);
+rho=c/sqrt(r(1)*(1-r(1))*r(end)*(1-r(end)));
 
-Rho=ones(numel(gamma));
-for k=1:numel(gamma)
-    Rho(k,k)=mu(k).*(1-mu(k));
-    for kk=k+1:numel(gamma);
-        Rho(k,kk)=bivnor(-gamma(k),-gamma(kk),Lambda(k,kk))-mu(k)*mu(kk);
-        Rho(kk,k)=Rho(k,kk);
-    end
+
+%keyboard
+if numel(gamma)==1
+    r=r(1);
 end
-

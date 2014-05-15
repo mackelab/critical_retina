@@ -1,4 +1,4 @@
-function [EntCount,EntModel,EntPatternsgivenModel, EntPatterns]=entropy_flat_model(ps,logbase)
+function [EntModel,EntCount,EntPatternsgivenModel, EntPatterns]=entropy_flat_model(ps,logbase)
 %calculates the entropy of a spike count histogram "ps" and the entropy of
 %the underlying population model, under the assumption that all patterns
 %with the same number of spike have the same probability. This is the

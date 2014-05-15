@@ -6,6 +6,6 @@ function A=corr_2_cov_01(A,mu)
 %
 %JHM 2014
 
-stdo=sqrt(mu.*(1-mu));
+stdo=sqrt(mu(:).*(1-mu(:)));
 stdA=repmat(stdo,1,size(A,1));
 A=A.*stdA.*(stdA');
