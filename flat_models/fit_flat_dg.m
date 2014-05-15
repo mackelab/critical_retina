@@ -1,5 +1,5 @@
-function [rho,lambda,count_distrib,model]=fit_flat_dg(mu,rho,N);
-%function [rho,lambda]=fit_flag_dag(mucount,varcount);
+function [gamma,lambda,count_distrib,model]=fit_flat_dg(mu,rho,N);
+%function [gamma,lambda]=fit_flag_dag(mucount,varcount);
 %
 %fit flat dg model to population data with given mean count and variance of
 %counts. 
