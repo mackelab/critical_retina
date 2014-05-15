@@ -29,5 +29,5 @@ for k=1:d
 end
 
 if nargout==2
-    PsInd=exp(states*log(PsMarg')+(1-states)*log(1-PsMarg'));
+    PsInd=CalcIndep(PsMarg,states);
 end

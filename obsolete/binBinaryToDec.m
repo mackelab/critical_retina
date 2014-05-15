@@ -5,9 +5,11 @@ function dec = binBinaryToDec(bin)
 %   last position is 2^0, first is 2^n-1
 %
 % Code from the paper: 'Generating spike-trains with specified
-% correlations', Macke et al., submitted for publication
+% correlations', Macke et al.
 %
-% www.kyb.mpg.de/bethgegroup/code/efficientsampling
+% NOTE: This function has basically the same functionality of BinaryToDec,
+% but assumes that each column (not row) is a new sample, it is included
+% only for backwards compatibility with old code
 
 
 bb = (size(bin,1)-1):-1:0;

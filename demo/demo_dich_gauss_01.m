@@ -55,10 +55,11 @@ C(eye(size(C))==1) = v;
 % vector P(x) = PROD_i P(X_i=1) and the DG distribution with the same mean
 % and the covariances as defined above.
 
-h1 = binHistIndep(mu);    % returns the histogram of an independent distribution
+states=AllStates(10);
 S = sampleDichGauss01(mu,C,1e5);
-h2 = binHist(S);          % creates a histogram of the binary patterns in S
-h2 = h2 / sum(h2);
+h1=CalcIndep(mu,states);
+[h2]=CountStates(S,states);
+
 
 % When we compare them, we see that some patterns occur much more often 
 % in the correlated then in the independent distribution. This a clear
