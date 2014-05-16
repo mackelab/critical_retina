@@ -1,4 +1,4 @@
-function [gamma,lambda,count_distrib,model]=fit_flat_dg(mu,rho,N);
+function [gamma,lambda,count_distrib,model]=fit_flat_dg(mu,rho,N,maxN);
 %function [gamma,lambda]=fit_flag_dag(mucount,varcount);
 %
 %fit flat dg model to population data with given mean count and variance of
@@ -10,8 +10,11 @@ function [gamma,lambda,count_distrib,model]=fit_flat_dg(mu,rho,N);
 [mucount,varcount]=meancorr_2_meanvar_count(mu,rho,N);
 [gamma,lambda]=Rho_2_Lambda(mu,rho);
 
+if nargin<=3
+    maxN=N;
+end
 
-count_distrib=flat_dg_count_distrib(gamma,lambda,[0:N],N);
+count_distrib=flat_dg_count_distrib(gamma,lambda,[0:maxN],N);
 
 if nargout==4
     model.mu=mu;
