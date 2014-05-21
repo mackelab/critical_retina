@@ -11,6 +11,9 @@ function [gamma,Lambda] = findLatentGaussian(mu,Sigma,acc)
 % Code from the paper: 'Generating spike-trains with specified
 % correlations', Macke et al., Neural Computation
 %
+%note: does NOT ensure that the matrix Lambda is positive definite, if oyu
+%want to do this, need to use the higham-correction.
+
 
 % parameter check
 if any(mu < 0 | mu >= 1)

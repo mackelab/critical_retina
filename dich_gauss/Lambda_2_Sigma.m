@@ -1,5 +1,7 @@
-function [mu, Rho]=Lambda_2_Rho(gamma, Lambda)
+function [mu, Sigma]=Lambda_2_Sigma(gamma, Lambda)
 %given latent gaussian, find mean and variance of resulting binary rvs
+
+gamma=gamma(:);
 
 variances=diag(Lambda);
 gamma=gamma./sqrt(variances);
@@ -7,12 +9,12 @@ Lambda=cov_2_corr(Lambda);
 
 mu=normcdf(gamma);
 
-Rho=ones(numel(gamma));
+Sigma=ones(numel(gamma));
 for k=1:numel(gamma)
-    Rho(k,k)=mu(k).*(1-mu(k));
+    Sigma(k,k)=mu(k).*(1-mu(k));
     for kk=k+1:numel(gamma);
-        Rho(k,kk)=bivnor(-gamma(k),-gamma(kk),Lambda(k,kk))-mu(k)*mu(kk);
-        Rho(kk,k)=Rho(k,kk);
+        Sigma(k,kk)=bivnor(-gamma(k),-gamma(kk),Lambda(k,kk))-mu(k)*mu(kk);
+        Sigma(kk,k)=Sigma(k,kk);
     end
 end
 
