@@ -42,7 +42,7 @@ Missing: Methods for calculating bias
 
 * demo_maxent.m: Fit a maximum entropy model (typically second order but code is flexible) in a case which can be solved exactly, i.e. for which one does not need MCMC.
  
-## Usage ## 
+## Usage
 
 To get started, change base_dir.m to the name of the directory that the code is sitting in, run startup.m to set the path, and run one of the demo-files in the demo-folder. 
 
