@@ -6,6 +6,19 @@ It has been developed and implemented with the goal of modelling spike-train rec
 
 The current version is (and to some degree will always be) work in progress.
 
+## Usage
+
+
+
+
+To get started, change base_dir.m to the name of the directory that the code is sitting in, run startup.m to set the path, and run one of the demo-files in the demo-folder. 
+
+
+
+
+Much of this code was developed in collaboration with---or even by--- the co-authors on the various manuscript. Feel free to use the code, but please acknowledge the source and paper appropriately if you are using it for a publication. 
+
+If you notice a bug, want to request a feature, or have a question or feedback, please make use of the issue-tracking capabilities of the repository. We love to hear from people using our code.
 
 ## Publications
 
@@ -42,10 +55,3 @@ Missing: Methods for calculating bias
 
 * demo_maxent.m: Fit a maximum entropy model (typically second order but code is flexible) in a case which can be solved exactly, i.e. for which one does not need MCMC.
  
-## Usage
-
-To get started, change base_dir.m to the name of the directory that the code is sitting in, run startup.m to set the path, and run one of the demo-files in the demo-folder. 
-
-Much of this code was developed in collaboration with---or even by--- the co-authors on the various manuscript. Feel free to use the code, but please acknowledge the source and paper appropriately if you are using it for a publication. 
-
-If you notice a bug or want to request a feature, please make use of the issue-tracking capabilities. We love to hear from people using our code.
