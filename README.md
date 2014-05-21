@@ -1,4 +1,4 @@
-# Welcome #
+# Welcome
 
 This repository contains a number of different statistical methods for modelling multivariate binary and count data with correlations. 
 
@@ -7,7 +7,7 @@ It has been developed and implemented with the goal of modelling spike-train rec
 The current version is (and to some degree will always be) work in progress.
 
 
-## Publications ## 
+## Publications
 
 (At least eventually), the repository will contain implementations of the methods presented in 
 
