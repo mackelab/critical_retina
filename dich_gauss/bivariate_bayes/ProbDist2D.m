@@ -1,6 +1,5 @@
 classdef ProbDist2D < handle
-    %PROBDISTRIBUTION Summary of this class goes here
-    %   Detailed explanation goes here
+    %PROBDIST2D Represents a 2D probability distribution.
     
     properties (SetAccess = private);
         sup_x
@@ -42,10 +41,6 @@ classdef ProbDist2D < handle
             
             COVxy = Exy - Ex' * Ey;
         end
-        
-%         function y = eval_pdf(obj, x, y)
-%             y = interp1(obj.support, obj.pdf_val, x, 'pchip');
-%         end
         
     end
     

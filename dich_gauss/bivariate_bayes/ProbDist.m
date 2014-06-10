@@ -1,6 +1,5 @@
 classdef ProbDist < handle
-    %PROBDISTRIBUTION Summary of this class goes here
-    %   Detailed explanation goes here
+    %PROBDIST Represents a 1D probability distribution.
     
     properties (SetAccess = private);
         sup_x
