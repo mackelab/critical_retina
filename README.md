@@ -6,6 +6,8 @@ It has been developed and implemented with the goal of modelling spike-train rec
 
 The current version is (and to some degree will always be) work in progress. 
 
+See [https://bitbucket.org/mackelab/home](https://bitbucket.org/mackelab/home) for more repositories by the group.
+
 ## Usage
 
 To get started, change base_dir.m to the name of the directory that the code is sitting in, run startup.m to set the path, and run one of the demo-files in the demo-folder. 
