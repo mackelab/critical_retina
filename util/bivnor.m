@@ -19,4 +19,10 @@ function [y]=bivnor(a,b,rho)
 % 2004 William Moranvil (moranviw@onid.orst.edu)
 %
 
+%truncate rho if rho is 1 or -1:
+if rho>1-eps
+    rho=1-eps;
+elseif rho<-1+eps;
+    rho=-1+eps;
+end
 y=mvncdf(-[a,b],[0,0],[1,rho;rho,1]);
