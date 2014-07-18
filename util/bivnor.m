@@ -18,3 +18,5 @@ function [y]=bivnor(a,b,rho)
 %
 % 2004 William Moranvil (moranviw@onid.orst.edu)
 %
+
+y=mvncdf(-[a,b],[0,0],[1,rho;rho,1]);
