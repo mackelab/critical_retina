@@ -37,9 +37,9 @@ normf = trapz(lambda, tmp);
 postJointPdf = postJointPdf / normf;
 
 %% find the marginals
-probFiring = 1 - normcdf(theta);
-[~, IX] = sort(probFiring);
-probFiring = probFiring(IX);
+% probFiring = 1 - normcdf(theta);
+% [~, IX] = sort(probFiring);
+% probFiring = probFiring(IX);
 
 marginals = cell(3, 1);
 % posterior marginal of theta1
@@ -47,13 +47,13 @@ pdfTheta1 = squeeze(trapz(...
     lambda, trapz(theta, postJointPdf, 2), 3));
 pdfTheta1(pdfTheta1 < 0) = 0;
 pdfTheta1 = pdfTheta1 / trapz(theta, pdfTheta1);
-marginals{1} = ProbDist(probFiring, pdfTheta1(IX));
+marginals{1} = ProbDist(theta, pdfTheta1);
 % posterior marginal of theta2
 pdfTheta2 = squeeze(trapz(...
     lambda, trapz(theta, postJointPdf, 1), 3));
 pdfTheta2(pdfTheta2 < 0) = 0;
 pdfTheta2 = pdfTheta2 / trapz(theta, pdfTheta2);
-marginals{2} = ProbDist(probFiring, pdfTheta2(IX));
+marginals{2} = ProbDist(theta, pdfTheta2);
 % posterior marginal of lambda
 pdfLambda = squeeze(trapz(...
     theta, trapz(theta, postJointPdf, 1), 2));
@@ -65,12 +65,12 @@ marginals{3} = ProbDist(lambda, pdfLambda);
 joints = cell(3,1);
 % prob(theta1, lambda)
 pdf = squeeze(trapz(theta, postJointPdf, 2));
-joints{1} = ProbDist2D(probFiring, lambda, pdf(IX,:));
+joints{1} = ProbDist2D(theta, lambda, pdf);
 % prob(theta2, lambda)
 pdf = squeeze(trapz(theta, postJointPdf, 1));
-joints{2} = ProbDist2D(probFiring, lambda, pdf(IX,:));
+joints{2} = ProbDist2D(theta, lambda, pdf);
 % prob(theta1, theta2)
 pdf = trapz(lambda, postJointPdf, 3);
-joints{3} = ProbDist2D(probFiring, probFiring, pdf(IX,IX));
+joints{3} = ProbDist2D(theta, theta, pdf);
 
 end
