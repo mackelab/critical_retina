@@ -2,7 +2,7 @@ function [gamma,Lambda] = findLatentGaussian(mu,Sigma,acc)
 
 % function [gamma,Lambda] = findLatentGaussian(mu,Sigma,acc)
 % 	Compute mean gamma and covariance Lambda for the hidden Gaussian random vector Z generating the
-% 	binary Bernoulli vector X with mean mu and covariances Sigma according to 
+% 	binary Bernoulli vector X with mean mu and covariances Sigma according to
 %     X = 0 <==> Z < 0
 %     X = 1 <==> Z > 0
 %
@@ -26,10 +26,10 @@ end
 
 % find mean and variances of the hidden variable via equ. 2.2
 n = length(mu);
-g = norminv(mu); 
+g = norminv(mu);
 L = eye(n);
 
-% find covariances by solving 
+% find covariances by solving
 % Sigma_ij - Psi(gamma_i,gamma_j,Lambda_ij) = 0 (equ. 2.2)
 for i = 1:n
     for j = i+1:n
@@ -37,25 +37,33 @@ for i = 1:n
         cMax = 1;
         
         % constant
-        pn = prod(normcdf([g(i) g(j)]));		
-
-        % check whether DG distribution for covariance exists
-        if (Sigma(i,j) - bivnor(-g(i),-g(j),-1) + pn) < -1e-3 || ...
-           (Sigma(i,j) - bivnor(-g(i),-g(j),1) + pn) > 1e-3
-            error('A joint Bernoulli distribution with the given covariance matrix does not exist!')
-           
-        end
-
-        % determine Lambda_ij iteratively by bisection (Psi is monotonic in rho)
-        while cMax - cMin > acc
-            cNew = (cMax + cMin) / 2;
-            if Sigma(i,j) > bivnor(-g(i),-g(j),cNew) - pn
-                cMin = cNew;
-            else
-                cMax = cNew;
+        pn = prod(normcdf([g(i) g(j)]));
+        
+        %if covariance is 0, lets not do optimization and just write down
+        %the answer:
+        
+        if abs(Sigma(i,j))<acc/2
+            cMax=0;
+            cMin=0;
+        else %otherwise do optimization:
+            
+            % check whether DG distribution for covariance exists
+            if (Sigma(i,j) - bivnor(-g(i),-g(j),-1) + pn) < -1e-3 || ...
+                    (Sigma(i,j) - bivnor(-g(i),-g(j),1) + pn) > 1e-3
+                error('A joint Bernoulli distribution with the given covariance matrix does not exist!')
+                
+            end
+            
+            % determine Lambda_ij iteratively by bisection (Psi is monotonic in rho)
+            while cMax - cMin > acc
+                cNew = (cMax + cMin) / 2;
+                if Sigma(i,j) > bivnor(-g(i),-g(j),cNew) - pn
+                    cMin = cNew;
+                else
+                    cMax = cNew;
+                end
             end
         end
-        
         L(i,j) = cMax;
         L(j,i) = cMax;
     end
