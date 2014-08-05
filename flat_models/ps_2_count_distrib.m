@@ -1,5 +1,8 @@
-function [freq]=CountOnes(states,P)
-%count the number of ones in patterns supplied in "states";
+function [freq]=ps_2_count_distrib(ps,states)
+%convert full probability mass function over states to count distribuion
+
+%also see CountOnes
+
 if ~islogical(states)
     states=DecToBinary(states);
 end
@@ -13,7 +16,7 @@ if nargin==1
     
 else
 for k=0:size(states,2)
-    freq(k+1)=sum(P(theones==k));
+    freq(k+1)=sum(ps(theones==k));
 end
 end
 freq=freq/sum(freq);

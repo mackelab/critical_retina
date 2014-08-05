@@ -1,4 +1,3 @@
-
 function [freqs,PNoHit,states]=CountStates(samples,states,P)
 %count frequency (i.e. histogram) over samples. If used with one argument,
 %just calculates histogram over all unique states, if 'states' is supplied
