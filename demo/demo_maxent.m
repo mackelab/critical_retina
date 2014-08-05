@@ -54,7 +54,7 @@ means_sampled=mean(features_sampled,1); clear featuressampled
  
  [lambda_learned,logZlearned, Plearned, means_learned,output]=FitMaxEntLinear(features,means_sampled, fitoptions);
  Plearned=exp(Plearned);
- EntropyLogE=ent((Plearned));
+ EntropyLogE=ent((Plearned),exp(1));
  [h_learned,J_learned]=hJ2lambda(lambda_learned);
 Plearned_hJ_check=qIsing(x,h_learned,J_learned,exp(logZlearned));
  
@@ -94,7 +94,7 @@ Plearned_hJ_check=qIsing(x,h_learned,J_learned,exp(logZlearned));
 
  [meano,covo]=MeanCov2Features(means_sampled)
  means_check=MeanCov2Features(meano,covo);
- [covo_check,meano_check]=wcov(AllStates(10),Plearned);
+ [covo_check,meano_check]=wcov(all_states(10),Plearned);
 
 [h_checko,J_checko,logZ,logP, patterns]=FitIsingModel(meano,covo);
 

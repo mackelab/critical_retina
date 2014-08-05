@@ -1,18 +1,19 @@
-function ent=ent(P,logbase)
+function ent=ent(ps,logbase)
 %calculate entropy given probability vector, for basis e or 2. If no
 %argument is given, uses base E.
+%WARNING: I changed the convention to basis 2 being the default!!
 
-P=P/sum(P);
+ps=ps(:);
+ps(ps==0)=1e-100;
+ps=ps/sum(ps);
 
-P(P<exp(-700))=exp(-700);
-
+ps(ps<exp(-700))=exp(-700);
 if nargin==1
-    logP=log(P);
-elseif logbase==2
-    logP=log2(P);
+    logbase=2;
 end
+scaler=1/log(logbase);
+logps=log(ps)*scaler;
 
+logps(isnan(logps))=0;
 
-logP(isnan(logP))=0;
-
-ent=-sum(P.*logP);
+ent=-sum(ps.*logps);

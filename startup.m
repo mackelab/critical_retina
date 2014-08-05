@@ -1,5 +1,4 @@
 addpath([pwd,'/demo'])
-addpath([pwd,'/pop_spike'])
 addpath([pwd,'/temp_files'])
 addpath([pwd,'/maxent'])
 addpath([pwd,'/maxent_MCMC'])
@@ -10,9 +9,12 @@ addpath([pwd,'/util/minFunc'])
 
 
 %compile C_Code  if neceessary
-if 1
+compile_c=0;
+if compile_c
     cd ./maxent_MCMC/C_Code
     ! make all
     cd ../..
+else
+    warning('Not compiling mex-files-- set compile_c=1 in file startup.m to compile');
 end
 

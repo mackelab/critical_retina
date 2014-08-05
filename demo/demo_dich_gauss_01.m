@@ -55,7 +55,7 @@ C(eye(size(C))==1) = v;
 % vector P(x) = PROD_i P(X_i=1) and the DG distribution with the same mean
 % and the covariances as defined above.
 
-states=AllStates(10);
+states=all_states(10);
 S = sampleDichGauss01(mu,C,1e5);
 h1=CalcIndep(mu,states);
 [h2]=CountStates(S,states);
