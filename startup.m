@@ -12,6 +12,7 @@ addpath([pwd,'/util/minFunc'])
 %compile C_Code  if neceessary
 compile_c=0;
 if compile_c
+    warning('Compiling mex-files, this might take a while');
     cd ./maxent_MCMC/C_Code
     ! make all
     cd ../..
