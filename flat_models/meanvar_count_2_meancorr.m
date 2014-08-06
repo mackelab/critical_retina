@@ -1,5 +1,5 @@
-function [mu,rho,c]=meanvar_count_2_meancorr(mucount,varcount,N);
-%given a population of N neurons with population count mean mucount and variance varcount, 
+function [mu,rho,c]=meanvar_count_2_meancorr(mucount,varcount,N)
+%given a population of N neurons with population count mean mucount and varianc varcount, 
 %calculate pairwise mean and correlation
 %coefficients.
 

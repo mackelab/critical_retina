@@ -116,3 +116,36 @@ xlabel('h J of first function')
 ylabel('h J of second function')
 
 
+%% Finally, we can also fit 'weighted maximum entropy problems' in which each 
+% the probability function is given by P(x)= exp(-logZ+ lambda' F(x)+ W(x))
+% for some specificed function (supplied as a lookup-table) W(x). 
+% we can e.g. use this to fit a maximum entropy model to very large neural
+% population data if we assume that all neurons ahve the same mean and
+% pairwise correlation, e.g. 
+mu=.1;
+rho=.2;
+N=200;
+[h,J,count_distrib,model]=fit_flat_ising_model(mu,rho,N);
+plot(count_distrib)
+xlabel('Number of synchronous spikes');
+ylabel('Probability');
+
+%check that means and correlations are correct:
+%first calculate mean and variance of spike count
+[mean_count,var_count]=calc_mean_var(count_distrib)
+%and then convert to mean and correlation:
+[mu_est,rho_est]=meanvar_count_2_meancorr(mean_count,var_count,N)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

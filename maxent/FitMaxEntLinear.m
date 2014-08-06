@@ -1,4 +1,4 @@
-function [lambda,logZ, logP, fitmeans,output]=FitMaxEntLinear(x, means, fitoptions)
+function [lambda,logZ, logP, fitmeans,output]=FitMaxEntLinear(x, means, fitoptions,weights)
 %Finds the parameters of a maximum entropy model of the form
 %P(x)=1/Z exp(\sum_i lambda_i x_i), such that the means of x under this model
 %match some supplied means.
@@ -9,6 +9,9 @@ function [lambda,logZ, logP, fitmeans,output]=FitMaxEntLinear(x, means, fitoptio
 %means: d by 1 vector of feature-means that we want to match
 %fitoptions: options of fit, as specified in the function minFunc by Mark
 %Schmidt
+% weights. Optional, a vector of weights (of the same length) as x to be
+% added to the log- probabilities, i.e. that the probabilities are then
+%P(x)=1/Z exp(\sum_i lambda_i x_i+ weight)
 %
 %outputs:
 %
@@ -22,8 +25,12 @@ function [lambda,logZ, logP, fitmeans,output]=FitMaxEntLinear(x, means, fitoptio
 if nargin==2
     fitoptions=[];
 end
-
 [N,d]=size(x);
+
+if nargin<=3
+    weights=0;
+end
+
 
 %if starting point is provided, use it:
 if isfield(fitoptions,'lambda0')
@@ -38,7 +45,7 @@ if ~isfield(fitoptions,'restarts')
     fitoptions.restarts=1;
 end
 
-funObj=@(lambda)(FitMaxEntLinearCostFunction(lambda,x,means));
+funObj=@(lambda)(FitMaxEntLinearCostFunction(lambda,x,means,weights));
 
 for k=1:numel(fitoptions.restarts)
     try
@@ -61,5 +68,5 @@ output.exitflag=exitflag;
 
 %return log probabilities, log partition function, probabilities, and
 %fitted means:
-[logP,logZ,P,fitmeans]=logPMaxEnt(x,lambda);
+[logP,logZ,P,fitmeans]=logPMaxEnt(x,lambda,[],weights);
 
