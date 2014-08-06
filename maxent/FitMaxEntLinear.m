@@ -61,5 +61,5 @@ output.exitflag=exitflag;
 
 %return log probabilities, log partition function, probabilities, and
 %fitted means:
-[logP,logZ,P,fitmeans]=PMaxEnt(x,lambda);
+[logP,logZ,P,fitmeans]=logPMaxEnt(x,lambda);
 

@@ -1,4 +1,4 @@
-function [logP,logZ,P, means]=PMaxEnt(x,lambda,logZ);
+function [logP,logZ,P, means]=logPMaxEnt(x,lambda,logZ);
 %calculate log probabilities, log partition function, probabilites and
 %feature means under a model of the form P(x)=exp(-logZ+lambda'*x)
 

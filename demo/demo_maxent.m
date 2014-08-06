@@ -41,7 +41,7 @@ fitoptions.MaxIter=3000;
             
 %calculate corresponding probabilities from ground-truth maximum entropy
 %model:
-[logPtrue,logZtrue,Ptrue, means_true]=PMaxEnt(features,lambda);
+[logPtrue,logZtrue,Ptrue, means_true]=logPMaxEnt(features,lambda);
 
 
 %now, generate synthetic data from this distribution:

@@ -9,7 +9,7 @@ function    [L,dL,ddL]=FitMaxEntLinearCostFunction(lambda,x,means)
 %output: (normalized) likelihood of data with means "means", and its
 %gradient and hessian
 
-[logP,logZ,P]=PMaxEnt(x,lambda);
+[logP,logZ,P]=logPMaxEnt(x,lambda);
 
 L=logZ-means*lambda;
 
