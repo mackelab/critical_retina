@@ -21,6 +21,7 @@ count_distrib=exp([0;lambda]'+lognchoosek'-logZ);
 
 
 if nargout==3
+    model=flat_model_calc_stats(count_distrib);
     model.lambda=lambda;
     model.count_distrib=count_distrib;
     model.logZ=logZ;
