@@ -28,7 +28,7 @@ weights=lognchoosek;
 
 h=lambda(1);
 J=lambda(2);
-count_distrib=exp(logP-logZ);
+count_distrib=exp(logP)';
 
 if nargout==4
     model.h=h;
