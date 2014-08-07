@@ -1,4 +1,4 @@
-function [varo,meano]= variance_log_probs_flat_model(ps,logbase)
+function [varo,meano]= flat_model_var_log_probs(ps,logbase)
 %calculate variance of log-probabilities on a flat model given only the
 %count distribution, without opening up the space of all states.
 
