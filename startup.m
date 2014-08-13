@@ -5,8 +5,8 @@ addpath([pwd,'/maxent_MCMC'])
 addpath([pwd,'/dich_gauss'])
 addpath([pwd,'/dich_gauss_bivar_bayes'])
 addpath([pwd,'/flat_models'])
-addpath([pwd,'/util'])
-addpath([pwd,'/util/minFunc'])
+addpath([pwd,'/third_party'])
+addpath([pwd,'/third_party/minFunc'])
 
 
 %compile C_Code  if neceessary
