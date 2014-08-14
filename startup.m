@@ -6,7 +6,11 @@ addpath([pwd,'/dich_gauss'])
 addpath([pwd,'/dich_gauss_bivar_bayes'])
 addpath([pwd,'/flat_models'])
 addpath([pwd,'/third_party'])
-addpath([pwd,'/third_party/minFunc'])
+addpath([pwd,'/third_party/minFunc_2012'])
+addpath([pwd,'/third_party/minFunc_2012/minFunc'])
+addpath([pwd,'/third_party/minFunc_2012/minFunc/compiled'])
+addpath([pwd,'/third_party/minFunc_2012/autoDif'])
+
 
 
 %compile C_Code  if neceessary
