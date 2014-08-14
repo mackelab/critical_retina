@@ -1,4 +1,4 @@
-function    [L,dL,ddL]=FitMaxEntLinearCostFunction(lambda,x,means,weights)
+function    [L,dL,ddL]=fit_maxent_linear_costfunction(lambda,x,means,weights)
 %objective function (likelihood) for fitting a discrete maximum entropy (or
 %log-linear) model of the form P(x)=1/z exp(lambda'*x) to means "means"
 

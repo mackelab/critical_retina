@@ -37,7 +37,7 @@ fitoptions.MaxIter=3000;
         
                 
 %set up second-order feature space for binary model:
-[features,description,x]=SetupFeaturesMaxEnt(dim_x,2);
+[features,description,x]=setup_features_maxent(dim_x,2);
             
 %calculate corresponding probabilities from ground-truth maximum entropy
 %model:
@@ -45,14 +45,14 @@ fitoptions.MaxIter=3000;
 
 
 %now, generate synthetic data from this distribution:
-features_sampled=SampleDiscrete(features,Ptrue,max(Ns));
+features_sampled=sample_discrete(features,Ptrue,max(Ns));
 
 %calculate their means as we will need this as intput for the fitting
 %procedure:
 means_sampled=mean(features_sampled,1); clear featuressampled
                     
  
- [lambda_learned,logZlearned, Plearned, means_learned,output]=FitMaxEntLinear(features,means_sampled, fitoptions);
+ [lambda_learned,logZlearned, Plearned, means_learned,output]=fit_maxent_linear(features,means_sampled, fitoptions);
  Plearned=exp(Plearned);
  EntropyLogE=ent((Plearned),exp(1));
  [h_learned,J_learned]=hJ2lambda(lambda_learned);
@@ -92,11 +92,11 @@ Plearned_hJ_check=qIsing(x,h_learned,J_learned,exp(logZlearned));
  
  %% We also have a function which does the bookkeeping internally, i.e. for whcih we never get to see the features: 
 
- [meano,covo]=MeanCov2Features(means_sampled)
- means_check=MeanCov2Features(meano,covo);
+ [meano,covo]=meancov_2_features(means_sampled)
+ means_check=meancov_2_features(meano,covo);
  [covo_check,meano_check]=wcov(all_states(10),Plearned);
 
-[h_checko,J_checko,logZ,logP, patterns]=FitIsingModel(meano,covo);
+[h_checko,J_checko,logZ,logP, patterns]=fit_ising_model(meano,covo);
 
 %%
 figure

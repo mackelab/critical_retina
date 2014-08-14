@@ -19,7 +19,7 @@ weights=beta*[0;lambda]+lognchoosek;
 
 x=[0:N]';
 means=mean_rate*N;
-[h,logZ, logPK, fitmeans,output]=FitMaxEntLinear(x, means, fitoptions,weights);
+[h,logZ, logPK, fitmeans,output]=fit_maxent_linear(x, means, fitoptions,weights);
 
 count_distrib=exp(logPK');
 %keyboard

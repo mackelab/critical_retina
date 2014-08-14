@@ -1,4 +1,4 @@
-function x=SampleDiscrete(x,P,Nsamples)
+function x=sample_discrete(x,P,Nsamples)
 %sample from discrete distribution, parametrized by N by d matrix x, each
 %of which is a data-point, corresponding to one of the entries of P, the N
 %b 1 vector of probabilities of each point.

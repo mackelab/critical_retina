@@ -24,7 +24,7 @@ lognchoosek=gammaln(N+1)-gammaln((0:maxN)'+1)-gammaln(N-(0:maxN)'+1);
 
 weights=lognchoosek;
 
-[lambda,logZ, logP, fitmeans,output]=FitMaxEntLinear(x, means, fitoptions,weights);
+[lambda,logZ, logP, fitmeans,output]=fit_maxent_linear(x, means, fitoptions,weights);
 
 h=lambda(1);
 J=lambda(2);

@@ -1,4 +1,4 @@
-function [gs,out2]=MeanCov2Features(mu, Sigma)
+function [gs,out2]=meancov_2_features(mu, Sigma)
 %convert covariance and mean to mean of feature vector, or vice versa
 
 if nargin==2 && nargout==1

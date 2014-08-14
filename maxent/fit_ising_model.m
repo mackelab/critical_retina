@@ -1,5 +1,5 @@
-function [h,J,logZ,logP, patterns]=FitIsingModel(mu,Cov)
-%function [h,J,logZ,logP, patterns]=FitIsingModel(mu,Cov)
+function [h,J,logZ,logP, patterns]=fit_ising_model(mu,Cov)
+%function [h,J,logZ,logP, patterns]=fit_ising_model(mu,Cov)
 %
 %fits parameters of an Ising model (i.e. second order binary maximum entropy model)
 % to binary data with mean mu and covariance Cov. Assumes that data is
@@ -29,10 +29,10 @@ d=numel(mu);
 %usually work with (i.e. P(x)=1/z exp (lambda' *features(x)))
 %make all patterns, and corresponding feature-representations of all
 %2-tupels on d binary patterns:
-[features,description,patterns]=SetupFeaturesMaxEnt(d,2);
+[features,description,patterns]=setup_features_maxent(d,2);
 
 
-means=MeanCov2Features(mu,Cov);
+means=meancov_2_features(mu,Cov);
  
 
 %get overall feature expecations by concatenating means and upper triangle
@@ -43,7 +43,7 @@ means=MeanCov2Features(mu,Cov);
 fitoptions.TolX=1e-20;
 fitoptions.TolFun=1e-20;
 fitoptions.display='off';
-[lambda,logZ, logP, junk,junk2]=FitMaxEntLinear(features,means, fitoptions);
+[lambda,logZ, logP, junk,junk2]=fit_maxent_linear(features,means, fitoptions);
 
 %now, extract h and J from the weights lambda:
 [h,J]=hJ2lambda(lambda);

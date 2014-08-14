@@ -1,4 +1,4 @@
-function [lambda,logZ, logP, fitmeans,output]=FitMaxEntLinear(x, means, fitoptions,weights)
+function [lambda,logZ, logP, fitmeans,output]=fit_maxent_linear(x, means, fitoptions,weights)
 %Finds the parameters of a maximum entropy model of the form
 %P(x)=1/Z exp(\sum_i lambda_i x_i), such that the means of x under this model
 %match some supplied means.
@@ -45,7 +45,7 @@ if ~isfield(fitoptions,'restarts')
     fitoptions.restarts=1;
 end
 
-funObj=@(lambda)(FitMaxEntLinearCostFunction(lambda,x,means,weights));
+funObj=@(lambda)(fit_maxent_linear_costfunction(lambda,x,means,weights));
 
 for k=1:numel(fitoptions.restarts)
     try

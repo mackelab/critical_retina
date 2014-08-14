@@ -1,4 +1,4 @@
-function [fvals,description,x]=SetupFeaturesMaxEnt(x,map,convention)
+function [fvals,description,x]=setup_features_maxent(x,map,convention)
 %calculature features for max-ent model fitting
 %first argument: the vectors to which the feature maps should be supplied
 %if the first argument is a single integer, then the function generates all

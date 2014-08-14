@@ -41,15 +41,15 @@ pause(1)
 fprintf('\nStep 2: Effect of correlations\n\n')
 fprintf('Computing...\n')
 
-% First, we generate a mean vector in ten dimensions. We assume that all
-% means are approximately .5, but we add some Gaussian noise to the network
-% is not to uniform. We set the covariances so that the resulting
-% correlations are sizable, but not to large (~0.1). 
+% First, we generate a mean vector in ten dimensions and a covariance
+% matrix:
 
-mu = ones(10,1) * .2 + randn(10,1)*0.05;
-v = mu.*(1-mu);
-C = ones(10,10) * .02;
-C(eye(size(C))==1) = v;
+g=randn(10,1)-1;
+G=randn(10);
+Lambda=cov_2_corr(G*G');
+[mu,C]=Lambda_2_Sigma(g,Lambda);
+
+
 
 % We find the histogram of the independent distribution with this mean
 % vector P(x) = PROD_i P(X_i=1) and the DG distribution with the same mean
