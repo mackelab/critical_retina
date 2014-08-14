@@ -32,8 +32,8 @@ fprintf('Target mean X1:  %.2f     Estimated mean X1:  %.3f\n',mu(1),muHat(1))
 fprintf('Target mean X2:  %.2f     Estimated mean X2:  %.3f\n',mu(2),muHat(2))
 fprintf('Target cov X1X2: %.2f     Estimated cov X1X2: %.3f\n',C(1,2),CHat(1,2))
 
-disp('To proceed to compare histograms, hit any key...')
-pause
+%disp('To proceed to compare histograms, hit any key...')
+pause(1)
 
 %% Step 2: How much do correlations change the distribution when means are
 % assumed to be equal?

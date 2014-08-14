@@ -50,8 +50,9 @@ fprintf('Target mean X1:  %.2f     Estimated mean X1:  %.3f\n',mu(1),muHat(1))
 fprintf('Target mean X2:  %.2f     Estimated mean X2:  %.3f\n',mu(2),muHat(2))
 fprintf('Target cov X1X2: %.2f     Estimated cov X1X2: %.3f\n',C(1,2),CHat(1,2))
 
-disp('To plot the marginals and joint histogram, hit any key...')
-pause
+%disp('To plot the marginals and joint histogram, hit any key...')
+pause(1)
+
 
 figure(f)
 
@@ -86,8 +87,8 @@ axis square
 title('')
 xlabel('X_1'), ylabel('X_2')
 
-disp('To proceed to negatively correlated Poisson variables, hit any key...')
-pause
+%disp('To proceed to negatively correlated Poisson variables, hit any key...')
+%paus
 
 %% Step 2: Generating correlated Poisson variables via the method 
 % in section 3.3 for negative correlations
@@ -114,8 +115,8 @@ fprintf('Target mean X1:  %.2f     Estimated mean X1:  %.3f\n',mu(1),muHat(1))
 fprintf('Target mean X2:  %.2f     Estimated mean X2:  %.3f\n',mu(2),muHat(2))
 fprintf('Target cov X1X2: %.2f     Estimated cov X1X2: %.3f\n',C(1,2),CHat(1,2))
 
-disp('To plot the marginals and joint histogram, hit any key...')
-pause
+%disp('To plot the marginals and joint histogram, hit any key...')
+pause(1)
 
 figure(f)
 
@@ -181,8 +182,8 @@ fprintf('Target mean X1:  %.2f     Estimated mean X1:  %.3f\n',mu(1),muHat(1))
 fprintf('Target mean X2:  %.2f     Estimated mean X2:  %.3f\n',mu(2),muHat(2))
 fprintf('Target cov X1X2: %.2f     Estimated cov X1X2: %.3f\n',C(1,2),CHat(1,2))
 
-disp('To plot the marginals and joint histogram, hit any key...')
-pause
+%disp('To plot the marginals and joint histogram, hit any key...')
+pause(1)
 
 figure(f)
 
