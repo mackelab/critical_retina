@@ -1,4 +1,4 @@
-function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov,PK)
+function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov,PK,fitoptions)
 %function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov)
 %
 %fits parameters of an Ising model (i.e. second order binary maximum entropy model)
@@ -14,8 +14,13 @@ function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov,PK)
 % P(x)=1/z exp(h'x+ 0.5*x' J x+ l_k sum(x))
 
 %inputs:
-%mu: vector of mean activities
-%Cov: covariance of activities
+%mu:  d-by-1 vector of mean activities
+%Cov: d-by-d matrix of covariance of activities
+%PK:  d-by-1 vector of count probabilities P(K), where for binary state x, 
+% (optional)                               K = sum(x)), for K = 1, ..., d
+%     PK = [] will be treated as PK not provided. 
+%fitoptions: structure of optional arguments for the general-purpose 
+% (optional)                               function minimizer used below
 %
 %outputs:
 %h:  vector of bias terms h
@@ -25,14 +30,27 @@ function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov,PK)
 %patterns: a vector all binary patterns with as many elements as mu
 
 %l: (only if PK is used) vector of weights for spike-count distribution
-
-
 %uses minFunc by Mark Schmidt
+
+
+% Set default minFunc options if not provided yet
+if nargin<4
+  fitoptions = [];
+end
+if ~isfield(fitoptions, 'optTol')
+ fitoptions.optTol=1e-20;
+end
+if ~isfield(fitoptions, 'progTol')
+ fitoptions.progTol=1e-20;
+end
+if ~isfield(fitoptions, 'display')
+ fitoptions.display='off';
+end
 
 
 %find dimensionality of input space
 d=numel(mu);
-if nargin==3
+if nargin>2 && ~isempty(PK)
     count_constraints=true;
     if numel(PK)>d
         error('PK should only contain probabilities for counts>0');
@@ -42,7 +60,7 @@ else
 end
 
 %need to convert mu and Cov to the binary feature expectations that I
-%usually work with (i.e. P(x)=1/z exp (lambda' *features(x)))
+%usually work with (i.e. P(x)=1/Z exp (lambda' *features(x)))
 %make all patterns, and corresponding feature-representations of all
 %2-tupels on d binary patterns:
 if ~count_constraints
@@ -62,9 +80,6 @@ end
 %means=[mu(:);pairmeans]';
 
 %use general purpose function "FitMaxEntLinear" to learn parameters:
-fitoptions.optTol=1e-20;
-fitoptions.progTol=1e-20;
-fitoptions.display='off';
 [lambda,logZ, logP, junk,junk2]=fit_maxent_linear(features,means, fitoptions,0,penalties);
 
 %now, extract h and J from the weights lambda:

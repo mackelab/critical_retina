@@ -1,22 +1,33 @@
-function [freq]=ps_2_count_distrib(ps,states)
-%convert full probability mass function over states to count distribuion
-
+function [pK]=ps_2_count_distrib(states, ps)
+%convert full probability mass function over states to count distribuion.
+%Counts are defined as K = sum(states,2) and for binary states range
+%between 0 and d. 
+%
+% Input: 
+%  - states: N-by-d matrix of N states in d-dimensional space. 
+%  - ps:     N-dim. vector of probabilities for each state
+% Output:
+%  - pK: (N+1)-dim. vector of probability of counts K = 0,...,d
+%
 %also see CountOnes
 
-if ~islogical(states) && any(any(states>1));
-    states=DecToBinary(states);
-end
+if ~islogical(states) && any(any(states>1)); %
+    states=DecToBinary(states);              % ? ... just don't touch it...
+end                                          %
 
-theones=sum(states,2);
+K = sum(states,2);     % compute counts
+Kmax = size(states,2); % maximum possible count
 
-if nargin==1
-    for k=0:size(states,2)
-        freq(k+1)=sum(theones==k);
+pK = zeros(1, Kmax+1);
+if nargin==1 % use empirical distribution for ps
+    for k=0:Kmax
+        pK(k+1)=sum(K==k);
     end
     
-else
-for k=0:size(states,2)
-    freq(k+1)=sum(ps(theones==k));
+else         % make use of provided ps
+    for k=0:Kmax
+       pK(k+1)=sum(ps(K==k));
+    end
 end
-end
-freq=freq/sum(freq);
+
+pK=pK/sum(pK); % normalize (should not be needed if nargin > 1...)
