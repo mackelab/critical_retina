@@ -5,7 +5,7 @@ function [lambda,out2]=hJ2lambda(h,J)
 
 if nargin==2 && nargout==1
     %convert h and J to lambda:
-    J=2*J';
+    J=J'*0.5;
     lambda=[h(:);vec(J(tril(ones(numel(h)),-1)==1))];
 %    keyboard
 elseif nargin==1 && nargout==2 %work in opposite direction, i.e. convert lambda to h and J
