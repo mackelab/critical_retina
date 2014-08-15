@@ -48,10 +48,13 @@ end
 if ~count_constraints
     [features,description,patterns]=setup_features_maxent(d,2);
     means=meancov_2_features(mu,Cov);
+    penalties=ones(size(means'))*1e-9;
 else
     [features,description,patterns]=setup_features_maxent(d,'ising_count');
     means=meancov_2_features(mu,Cov);
     means=[means, PK];
+    penalties=ones(size(means'))*1e-9;
+    penalties(end-d+1:end)=1e-6;
 end
 
 %get overall feature expecations by concatenating means and upper triangle
@@ -62,7 +65,7 @@ end
 fitoptions.optTol=1e-20;
 fitoptions.progTol=1e-20;
 fitoptions.display='off';
-[lambda,logZ, logP, junk,junk2]=fit_maxent_linear(features,means, fitoptions);
+[lambda,logZ, logP, junk,junk2]=fit_maxent_linear(features,means, fitoptions,0,penalties);
 
 %now, extract h and J from the weights lambda:
 if ~count_constraints
