@@ -1,4 +1,4 @@
-function [fvals,description,x]=setup_features_maxent(x,map,convention)
+function [fvals,description,x]=setup_features_maxent(x,map)
 %calculature features for max-ent model fitting
 %first argument: the vectors to which the feature maps should be supplied
 %if the first argument is a single integer, then the function generates all
@@ -8,6 +8,8 @@ function [fvals,description,x]=setup_features_maxent(x,map,convention)
 %x: either a matrix of size N by d, where each row is a vector of
 %data-points (usually binary)
 %map: either integers 1, 2, 3, ('first', 'second', 'third-order' maxent),
+% or 'ising' (same as 2) or 'ising_count' for ising model with additional 
+%constraints on the total activity count
 %or a function handle for using user-supplied feature maps
 %
 %outputs:
@@ -25,9 +27,9 @@ if (N==d) && (N==1);
     N=2^d;
     x=(0:(N-1))';
     x=DecToBin(x);
-    if nargin==3 && convention==-1
-        x=2*x-1;
-    end
+   % if nargin==3 && convention==-1
+   %     x=2*x-1;
+   % end
 end
 
 if mean(x(:)==0)>.5
@@ -38,19 +40,23 @@ switch map
     case 1
         fvals=x;
         description=[1:d];
-    case 2
+    case {2,'ising'}
         pairs=nchoosek(1:d,2)';
         description=[[1:d; (1:d)*nan],pairs];  
         fvals=[x,x(:,pairs(1,:)).*x(:,pairs(2,:))];
     case 3
-        
         pairs=nchoosek(1:d,2)';
         triplets=nchoosek(1:d,3)';
         description=[[1:d; (1:d)*nan;(1:d)*nan],[pairs; pairs(1,:)*nan],triplets];  
         fvals=[x,x(:,pairs(1,:)).*x(:,pairs(2,:)),x(:,triplets(1,:)).*x(:,triplets(2,:)).*x(:,triplets(3,:))];
-    
-    
-        
+    case 'ising_count'
+        pairs=nchoosek(1:d,2)';
+        count_indicators=zeros(N,d);
+        ind=sub2ind([N,d],2:N,sum(x(2:end,:)'));
+        count_indicators(ind)=1;
+        description=[[1:d; (1:d)*nan],pairs,[1:d; (1:d)*nan]];  
+        fvals=[x,x(:,pairs(1,:)).*x(:,pairs(2,:)),count_indicators];
+        %keyboard
     otherwise
         fvals=feval(map,x);
         description='custom map, no description available';
