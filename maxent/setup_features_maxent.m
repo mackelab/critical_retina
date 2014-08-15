@@ -52,7 +52,9 @@ switch map
     case 'ising_count'
         pairs=nchoosek(1:d,2)';
         count_indicators=zeros(N,d);
-        ind=sub2ind([N,d],2:N,sum(x(2:end,:)'));
+        sum_x=sum(x,2);
+        nonzero=find(sum_x>0);
+        ind=sub2ind([N,d],nonzero,sum_x(nonzero));
         count_indicators(ind)=1;
         description=[[1:d; (1:d)*nan],pairs,[1:d; (1:d)*nan]];  
         fvals=[x,x(:,pairs(1,:)).*x(:,pairs(2,:)),count_indicators];

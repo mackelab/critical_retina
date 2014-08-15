@@ -1,5 +1,5 @@
 function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov,PK)
-%function [h,J,logZ,logP, patterns]=fit_ising_model(mu,Cov)
+%function [h,J,logZ,logP, patterns,l]=fit_ising_model(mu,Cov)
 %
 %fits parameters of an Ising model (i.e. second order binary maximum entropy model)
 % to binary data with mean mu and covariance Cov. Assumes that data is
