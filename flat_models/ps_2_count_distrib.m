@@ -3,7 +3,7 @@ function [freq]=ps_2_count_distrib(ps,states)
 
 %also see CountOnes
 
-if ~islogical(states)
+if ~islogical(states) && any(any(states>1));
     states=DecToBinary(states);
 end
 
