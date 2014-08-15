@@ -1,4 +1,4 @@
-%% Demo Script to illustrate the "FitMaxEnt" Code Package
+%% Demo Script to illustrate the function demo_maxent
 % code fits maximum entropy models to multivariate binary data, using
 % user-specified feature functions and means. Current implementation only works for data
 % for which the sample space can be summed over exactly, and the
@@ -49,11 +49,11 @@ features_sampled=sample_discrete(features,Ptrue,max(Ns));
 
 %calculate their means as we will need this as intput for the fitting
 %procedure:
-means_sampled=mean(features_sampled,1); clear featuressampled
+means_sampled=mean(features_sampled,1); clear features_sampled
                     
  
- [lambda_learned,logZlearned, Plearned, means_learned,output]=fit_maxent_linear(features,means_sampled, fitoptions);
- Plearned=exp(Plearned);
+ [lambda_learned,logZlearned, logPlearned, means_learned,output]=fit_maxent_linear(features,means_sampled, fitoptions);
+ Plearned=exp(logPlearned);
  EntropyLogE=ent((Plearned),exp(1));
  [h_learned,J_learned]=hJ2lambda(lambda_learned);
 Plearned_hJ_check=qIsing(x,h_learned,J_learned,exp(logZlearned));
@@ -116,15 +116,7 @@ xlabel('h J of first function')
 ylabel('h J of second function')
 
 
-
-
-
-
-
-
-
-
-
+pause(1)
 
 
 

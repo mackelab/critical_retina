@@ -21,6 +21,6 @@ elseif nargin==1 && nargout==2 %work in opposite direction, i.e. convert lambda 
         %Sigma=Sigma+Sigma';
         %Sigma=Sigma+diag(mu.*(1-mu));
         lambda=h;
-        out2=J/2;
+        out2=J*2;
     end
 end
