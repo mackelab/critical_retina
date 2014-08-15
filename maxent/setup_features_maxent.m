@@ -5,8 +5,11 @@ function [fvals,description,x]=setup_features_maxent(x,map)
 %binary vectors {0,1} with that many elements, 
 %
 %inputs: 
-%x: either a matrix of size N by d, where each row is a vector of
-%data-points (usually binary)
+%x: either a matrix of size N-by-d, where each row is a vector of
+%data-points (usually binary), or an integer (size(x) = [1,1]). 
+%In the latter case, x is interpreted as the dimensionality of a binary
+%space and fevals will be evaluated at all 2^x points within that space
+%
 %map: either integers 1, 2, 3, ('first', 'second', 'third-order' maxent),
 % or 'ising' (same as 2) or 'ising_count' for ising model with additional 
 %constraints on the total activity count

@@ -1,14 +1,18 @@
 function [lambda,out2]=hJ2lambda(h,J)
-%convert parameters of Ising model in representation P(x)=1/Z*exp(h'*x+ 0.5*x'J
-%x)) to P(x)=1/x*exp(lambda' f(x)) where f(x) is a feature-representation
-%as returned by the function "SetupFeaturesMaxEnt"
+%        [lambda]     =hJ2lambda(h,J)
+%        [ h, J ]     =hJ2lambda(lambda)
+% convert parameters of Ising model in representation P(x)=1/Z*exp(h'*x+ 0.5*x'J
+% x)) to P(x)=1/Z*exp(lambda' f(x)) where f(x) is a feature-representation
+% as returned by the function "SetupFeaturesMaxEnt".
+% Works only for binary x, as then x^2 = x. 
 
-if nargin==2 && nargout==1
+if nargin==2 && nargout==1     %  [lambda] = hJ2lambda(h, J)
     %convert h and J to lambda:
     J=J'*0.5;
     lambda=[h(:);vec(J(tril(ones(numel(h)),-1)==1))];
 %    keyboard
-elseif nargin==1 && nargout==2 %work in opposite direction, i.e. convert lambda to h and J
+elseif nargin==1 && nargout==2 %  [h, J]   = hJ2lambda(lambda) 
+    % work in opposite direction, i.e. convert lambda to h and J
     lambda=h;
     dimo=(-1+sqrt(1+8*numel(lambda)))/2;
     if abs(rem(dimo,1))>1e-10

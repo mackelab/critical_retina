@@ -9,10 +9,10 @@ function [lambda,logZ, logP, fitmeans,output]=fit_maxent_linear(x, means, fitopt
 %means: d by 1 vector of feature-means that we want to match
 %fitoptions: options of fit, as specified in the function minFunc by Mark
 %Schmidt
-% weights. Optional, a vector of weights (of the same length) as x to be
+% weights:. Optional, a vector of weights (of the same length) as x to be
 % added to the log- probabilities, i.e. that the probabilities are then
 %P(x)=1/Z exp(\sum_i lambda_i x_i+ weight)
-%penalites. Optional, a vector the same size as means, which indicates the 
+%penalites: Optional, a vector the same size as means, which indicates the 
 %weights with wich each lambda entry is penalized. The penalty term is
 % Q= 0.5*sum_k lambda(k)^2 penalites(k). If we want to interpret this as a
 % Bayesian Gaussian prior with variance sigma^2(k), then 
@@ -22,15 +22,16 @@ function [lambda,logZ, logP, fitmeans,output]=fit_maxent_linear(x, means, fitopt
 %
 %lambda: vector of parameters of Max-Ent model
 %logZ: log-partition function of model
+%fitmeans: fitted means
+%output: output structure returned by the function minimizer minFunc()
 %
 %uses minFunc by Mark Schmidt
 
+[N,d]=size(x);
 
-%fitmeans: fitted means
 if nargin==2
     fitoptions=[];
 end
-[N,d]=size(x);
 
 if nargin<=3
     weights=0;
@@ -41,7 +42,6 @@ if nargin<=4
 elseif numel(penalties)==1
     penalties=penalties*ones(d,1);
 end
-
 
 %if starting point is provided, use it:
 if isfield(fitoptions,'lambda0')

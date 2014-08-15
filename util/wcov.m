@@ -1,4 +1,4 @@
-function [c,m]=wcov(x,P);
+function [c,m]=wcov(x,P)
 %wheighted covariance matrix and mean, i.e. mean and covariance of x under
 %the distribution P
 

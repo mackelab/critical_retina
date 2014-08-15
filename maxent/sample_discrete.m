@@ -1,7 +1,7 @@
 function x=sample_discrete(x,P,Nsamples)
-%sample from discrete distribution, parametrized by N by d matrix x, each
-%of which is a data-point, corresponding to one of the entries of P, the N
-%b 1 vector of probabilities of each point.
+%sample from discrete distribution, parametrized by N-by-d matrix x, each
+%of which is a data-point, corresponding to one of the entries of P, the 
+%N-by-1 vector of probabilities of each point.
 
 Pcum=cumsum(P);
 
@@ -11,9 +11,7 @@ psamples=rand(Nsamples,1);
 %for each sample, need to find closest index in Pcum:
 
 
-[a,b] = histc(psamples,[0;Pcum]);
-
-
+[~,b] = histc(psamples,[0;Pcum]);
 
 %keyboard
 
