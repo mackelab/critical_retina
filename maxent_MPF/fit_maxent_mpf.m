@@ -29,13 +29,28 @@ end
  % Data preprocessing (data does not change over minFunc calls, do it once)
   data.x      = x';
   data.counts = sum(data.x,1);
+  % Compute mask:
   data.mask   = ones(d,n);    
-  for i = 1:n
-    idx = find(sum(data.x ~= data.x(:,i)*ones(1,n))==1);
-    for j = 1:length(idx)
-     data.mask(data.x(:,i)~=data.x(:,idx(j)),i) = 0; 
-    end
+  
+  % 1. Only work once with each pattern
+  [xUnq,idxfUnq,idxUnq] = unique(x, 'rows'); xUnq = xUnq';
+  countsUnq = data.counts(idxfUnq);
+  % 2. Sort by activity count (narrows down which can differ by one bit)
+ for k = 0:d         
+  idk    = find(countsUnq == k);            % potential neighbours (by    
+  idkp1  =     (countsUnq == k+1);          % virtue of having a count 
+  xkn    = xUnq(:,idkp1);                   % difference of exactly one)
+  fidkp1 = find(idkp1);
+  % 3. Find actual neighbours by direct comparison of patterns
+  for i = 1:length(idk) % for all patterns with count k ...
+   idx = find(sum(bsxfun(@ne, xkn, xUnq(:,idk(i))))==1);% actual neighbours
+  % 4. For each identified neightbour, check which bit mustn't be flipped
+   for j = 1:length(idx) % for all of their neighouring patterns ...
+    data.mask(xUnq(:,idk(i))~=xkn(:,idx(j)),idk(i)==idxUnq) = 0; 
+    data.mask(xUnq(:,idk(i))~=xkn(:,idx(j)),fidkp1(idx(j))==idxUnq) = 0; 
+   end
   end
+ end
  % Numerical optimization step
   [lambda,f,exitflag,output] = minFunc( @K_dK_ising_PK, lambda, fitoptions, data );
   output.fs=f;
@@ -45,12 +60,12 @@ end
   J = reshape(lambda(1:d^2),d,d);
   h = diag(J);
   J = 2*J(logical(triu(ones(size(J)),1)));
-  L = lambda(end-d+1:end);                     % CURRENTLY JUST DROPPING THE PARAMETER FOR K = 0 !
+  L = lambda(end-d:end);                     
   lambda = [ h(:); J(:); L(:) ];
   
    weights = 0; % currently cannot set them otherwise with this method. 
    
-   fx = setup_features_maxent(x, 'ising_count');
+   fx = setup_features_maxent(x, 'ising_count_l_0');
   [logP,logZ,~,fitmeans]= logPMaxEnt(fx,lambda,[],weights);
   
 end
