@@ -1,4 +1,4 @@
-function [logP,logZ,P, means]=logPMaxEnt(x,lambda,logZ, weights)
+function [logP,logZ,P, means]=logPMaxEnt(x,lambda,logZ, weights, mode)
 %calculate log probabilities, log partition function, probabilites and
 %feature means under a model of the form P(x)=exp(-logZ+lambda'*x).
 %If fourth argument 'weights' is added, it instead calculates P(x)=
@@ -9,7 +9,12 @@ if numel(x)==1
     dimo=x;
     %use standard ordering for x, assuming a second order Ising model:
     %dimo=dimo=-1+sqrt(1+4*numel(lambda));
-    [x]=SetupFeaturesMaxEnt(dimo,2);
+    switch mode
+        case {2,'ising'}
+           [x]=setup_features_maxent(dimo,2);
+        case 'ising_count'
+           [x]=setup_features_maxent(dimo,'ising_count'); 
+    end
     % keyboard
 end
 
