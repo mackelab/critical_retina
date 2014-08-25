@@ -9,8 +9,8 @@
 description = 'd=50, 10000 samples'
 
 % initialize
-d = 50; % number of units
-nsamples = 10000; % number of training samples
+d = 5; % number of units
+nsamples = 1000; % number of training samples
 maxlinesearch = 10000; % this number is excessive just to be safe!!!!!! learning works fine if this is just a few hundred
 independent_steps = 10*d; % the number of gibbs sampling steps to take between samples
 
@@ -50,6 +50,11 @@ Jnew = randn( d, d ) / sqrt(d) / 100;
 Jnew = Jnew + Jnew';
 Jnew = Jnew/2;
 
+L = randn( d+1, 1) / d;
+
+Lnew = L;
+
+
 % perform parameter estimation
 fprintf( '\nRunning minFunc for up to %d learning steps...\n', maxlinesearch );
 t_min = tic();
@@ -63,7 +68,14 @@ t_min = tic();
 % additional connection between each state and the state which is reached
 % by flipping all bits.  This connectivity pattern performs better in cases
 % (like neural spike trains) where activity is extremely sparse.
-Jnew = minFunc( @K_dK_ising_allbitflipextension, Jnew(:), minf_options, Xall );
+
+lambda = [Jnew(:);Lnew(:)];
+
+lambdanew = minFunc( @K_dK_ising_PK, lambda, minf_options, Xall );
+JnewPK = reshape(lambdanew(1:d^2), size(J));
+LnewPK = lambdanew(end-d:end);
+
+Jnew = minFunc( @K_dK_ising, Jnew(:), minf_options, Xall );
 
 Jnew = reshape(Jnew, size(J));
 t_min = toc(t_min);
@@ -94,38 +106,48 @@ cmx = max( [Corr(:); Corrnew(:); Corrdiff(:)] );
 
 % show the original, recovered and differences in coupling matrices
 figure();
-subplot(2,3,1);
+subplot(2,4,1);
 imagesc( J, [jmn, jmx] );
 axis image;
 colorbar;
 title( '{J}_{ }' );
-subplot(2,3,2);
+subplot(2,4,2);
 imagesc( Jnew, [jmn, jmx] );
 axis image;
 colorbar;
 title( '{J}_{new}' );
-subplot(2,3,3);
+subplot(2,4,3);
 imagesc( Jdiff, [jmn, jmx] );
 axis image;
 colorbar;
 title( '{J}_{ } - {J}_{new}' );
+subplot(2,4,4);
+imagesc( JnewPK, [jmn, jmx] );
+axis image;
+colorbar;
+title( '{J}_{new, V(K)}' );
 
 % show the original, recovered and differences in correlation matrices
-subplot(2,3,4);
+subplot(2,4,5);
 imagesc( Corr, [cmn,cmx] );
 axis image;
 colorbar;
 title( '{C}_{ }' );    
-subplot(2,3,5);
+subplot(2,4,6);
 imagesc( Corrnew, [cmn,cmx] );
 axis image;
 colorbar;
 title( '{C}_{new}' );    
-subplot(2,3,6);
+subplot(2,4,7);
 imagesc( Corrdiff, [cmn,cmx] );
 axis image;
 colorbar;
 title( '{C}_{ } - {C}_{new}' );    
+subplot(2,4,8);
+imagesc( Corrnew, [cmn,cmx] );
+axis image;
+colorbar;
+title( '{C}_{new, V(K)}' );    
 
 figure();
 plot( Corr(:), Corrnew(:), '.' );

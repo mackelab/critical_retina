@@ -5,8 +5,8 @@
 clear all
 close all
 
-dim_x=10; %simulate 10 dimensional problem
-Ns= 100000; %generate 1000 data-points;
+dim_x=15; %simulate 10 dimensional problem
+Ns= 5000; %generate 1000 data-points;
 
 h=randn(dim_x,1)-1; %generate random bias terms;
 J=randn(dim_x); J=triu(J,1)/sqrt(dim_x); 
@@ -39,8 +39,9 @@ count_histogram_sampled=ps_2_count_distrib(x_sampled, ones(Ns,1)/Ns);      % rel
 
 fitoptions.optTol=1e-100; 
 fitoptions.progTol=1e-100; 
-fitoptions.display='off';
+%fitoptions.display='off';
 fitoptions.MaxIter=3000;
+
 
 %penalites pK parameters:
 penalties=zeros(size(means_sampled'));
@@ -53,59 +54,72 @@ penalties=zeros(size(means_sampled'));
 % fit model without activity counts:   
 [lambda_learned_ising,logZlearned_ising, logPlearned_ising, means_learned_ising,output_ising]=fit_maxent_linear(features_count(:,1:end-dim_x),means_sampled(1:end-dim_x),fitoptions);
  
+% try out new MPF code:
+[lambdaMPF,logZlearnedMPF,logPlearnedMPF,meanslearnedMPF,outputMPF]=fit_maxent_mpf(x_sampled, fitoptions);
+
+lambdaMPF = -lambdaMPF;
+
 [logPlearned]=logPMaxEnt(features_count,lambda_learned);
 [logPlearned_ising]=logPMaxEnt(features,lambda_learned_ising);
+[logPlearnedMPF]=logPMaxEnt(features_count,lambdaMPF);
 
 count_histogram_learned=ps_2_count_distrib(x, exp(logPlearned));           % changed order of arguments
 count_histogram_learned_hJ=ps_2_count_distrib(x, exp(logP_learned_hJ));    % relative to Jakob's version!
 count_histogram_ising=ps_2_count_distrib(x, exp(logPlearned_ising));       %
+count_histogram_MPF=ps_2_count_distrib(x, exp(logPlearnedMPF));       %
 
 
 
-%%
-figure
-subplot(2,3,1)
+figure(1)
+subplot(2,2,1)
 plot(0:dim_x,count_histogram_true,'-')
 hold on
 plot(0:dim_x,count_histogram_sampled,'r-')
 plot(1:dim_x,means_sampled(end-dim_x+1:end),'o')
+plot(0:dim_x,count_histogram_MPF, 'ko-')
 title('Activity count histograms')
-legend('true', 'sampled (from x)', 'sampled(from f(x))') 
-
+legend('true', 'sampled (from x)', 'sampled(from f(x))', 'MPF fit') 
+hold off
 xlabel('Counts')
 ylabel('Frequency')
 
-subplot(2,3,2)
+subplot(2,2,2)
 plot(logPtrue,logPlearned,'b.')
 hold on
 plot(logPtrue,logPlearned_ising,'r.')
 plot(logPtrue,logP_learned_hJ,'gx')
+plot(logPtrue,logPlearnedMPF,'ko')
 xlabel('true log(P(x))'), ylabel('learned log(P(x))')
-legend('(h,J,V(K))', '(h,J)', '(h,J)', 'Location', 'Southeast')
+legend('(h,J,V(K))', '(h,J)', '(h,J) Ising', '(h,J,V(K)) MPF', 'Location', 'Southeast')
 title('Learned P(x) and ground truth')
+hold off
 eqline
 
 
-subplot(2,3,3)
+subplot(2,2,3)
 plot(lambda,'.')
 hold on
 plot(lambda_learned,'gx')
 plot(lambda_learned_ising,'k.')
+plot(lambdaMPF, 'ro')
 xlabel(['feature dimension i = 1,...,', num2str(length(lambda_learned))])
 ylabel('\lambda_i')
 title('Learned parameters \lambda and ground trugh')
-legend('true', '(j,J,V(K))', '(h,J)', 'Location', 'Southeast')
+legend('true', '(j,J,V(K))', '(h,J)', '(h,J,V(K)) MPF', 'Location', 'Southeast')
+hold off
 
-subplot(2,3,4)
+subplot(2,2,4)
 semilogy(0:dim_x,count_histogram_true,'-')
 hold on
 semilogy(0:dim_x,count_histogram_learned,'r-')
 semilogy(0:dim_x,count_histogram_ising,'o')
 semilogy(0:dim_x,count_histogram_learned_hJ,'g-')
-legend('true', '(j,J,V(K))', '(h,J)', '(h,J)', 'Location', 'South')
+semilogy(0:dim_x,count_histogram_MPF,'ko--')
+legend('true', '(j,J,V(K))', '(h,J)', '(h,J)', '(h,J,V(K)) MPF', 'Location', 'South')
 title('Activity count probabilities, semilog')
 xlabel('K')
 ylabel('log(P(K))')
+hold off
 
 %%
 
