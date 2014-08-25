@@ -14,6 +14,8 @@ if numel(x)==1
            [x]=setup_features_maxent(dimo,2);
         case 'ising_count'
            [x]=setup_features_maxent(dimo,'ising_count'); 
+        case 'ising_count_l_0'
+           [x]=setup_features_maxent(dimo,'ising_count_l_0'); 
     end
     % keyboard
 end

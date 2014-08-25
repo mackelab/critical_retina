@@ -62,6 +62,13 @@ switch map
         description=[[1:d; (1:d)*nan],pairs,[1:d; (1:d)*nan]];  
         fvals=[x,x(:,pairs(1,:)).*x(:,pairs(2,:)),count_indicators];
         %keyboard
+    case 'ising_count_l_0' % same as 'ising_count', but has feature for K=0
+        pairs=nchoosek(1:d,2)';
+        count_indicators=zeros(N,d+1);
+        ind=sub2ind([N,d+1],(1:N)',sum(x,2)+1);
+        count_indicators(ind)=1;
+        description=[[1:d; (1:d)*nan],pairs,[0:d; (0:d)*nan]];  
+        fvals=[x,x(:,pairs(1,:)).*x(:,pairs(2,:)),count_indicators];
     otherwise
         fvals=feval(map,x);
         description='custom map, no description available';
