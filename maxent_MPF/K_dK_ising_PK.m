@@ -21,7 +21,6 @@ function [K, dK, Kfull] = K_dK_ising_PK( lambda, data )
     [d, n] = size( data.x );
 
     J = reshape(lambda(1:d^2), d, d);
-    J = (J + J')/2;
     L = lambda(end-d:end);                
       %  assumes size(L) = [d+1,1], i.e. also a feature for K = 0!!!
 

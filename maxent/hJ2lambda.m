@@ -8,7 +8,7 @@ function [lambda,out2]=hJ2lambda(h,J)
 
 if nargin==2 && nargout==1     %  [lambda] = hJ2lambda(h, J)
     %convert h and J to lambda:
-    J=J'*0.5;
+    J=J';
     lambda=[h(:);vec(J(tril(ones(numel(h)),-1)==1))];
 %    keyboard
 elseif nargin==1 && nargout==2 %  [h, J]   = hJ2lambda(lambda) 

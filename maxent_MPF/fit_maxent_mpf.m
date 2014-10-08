@@ -5,7 +5,7 @@ function [lambda,logZ,logP,fitmeans,output]=fit_maxent_mpf(x, fitoptions)
 
 %if starting point is provided, use it:
 if isfield(fitoptions,'lambda0')
-    lambda=fitoptions.lambda0(:);
+    lambda= fitoptions.lambda0(:);
 else
     %otherwise use zeros:
     lambda=zeros( d + d*(d-1)/2 + (d+1), 1);
@@ -13,10 +13,10 @@ else
 end
 
  % Parameter convention-conversion fun.
-  J = diag(lambda(1:d));                  % fiddle contents of h into J
-  J(logical(triu(ones(size(J)),1))) = ... % fiddle contents of J into J
-                              lambda(d+(1:d*(d-1)/2)); 
-  J = (J + J')/2; % MPF actually requires some real matrix computations of
+  J = diag(lambda(1:d));                   % fiddle contents of h into J
+  J(logical(tril(ones(size(J)),-1))) = ... % fiddle contents of J into J
+                              lambda(d+1:d*(d+1)/2); 
+  J = (J + J')/2;   % MPF actually requires some real matrix computations of
                   % J with the data matrix x, thus it appears a bit tedious
                   % to work with upper-triangular J and pack/unpack each 
                   % call and to instead simply work with n^2 entries for J. 
@@ -59,7 +59,7 @@ end
  % More parameter convention-conversion fun.  
   J = reshape(lambda(1:d^2),d,d);
   h = diag(J);
-  J = 2*J(logical(triu(ones(size(J)),1)));
+  J = 2*J(logical(tril(ones(size(J)),-1)));
   L = lambda(end-d:end);                     
   lambda = [ h(:); J(:); L(:) ];
   

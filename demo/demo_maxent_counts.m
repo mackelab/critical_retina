@@ -3,13 +3,13 @@
 %% First generate some samples from an Ising model-- in this case
 %the parameters for the PKs should be close to 0.
 clear all
-close all
+%close all
 
 dim_x=15; %simulate 10 dimensional problem
 Ns= 5000; %generate 1000 data-points;
 
 h=randn(dim_x,1)-1; %generate random bias terms;
-J=randn(dim_x); J=triu(J,1)/sqrt(dim_x); 
+J=randn(dim_x); J=triu(J,1);%/sqrt(dim_x); 
 lambda=hJ2lambda(h,J);
 
         
@@ -68,7 +68,7 @@ count_histogram_learned_hJ=ps_2_count_distrib(x, exp(logP_learned_hJ));    % rel
 count_histogram_ising=ps_2_count_distrib(x, exp(logPlearned_ising));       %
 count_histogram_MPF=ps_2_count_distrib(x, exp(logPlearnedMPF));       %
 
-figure(1)
+figure
 subplot(2,2,1)
 plot(0:dim_x,count_histogram_true,'r--')
 hold on
