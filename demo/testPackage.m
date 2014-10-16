@@ -3,19 +3,19 @@ clc
 
 % Simulation setup
 %--------------------------------------------------------------------------
-d=10; %simulate 10 dimensional problem
-nSamplesTrain = [100,1000,10000]; %generate 1000 data-points;
-nSamplesEval  = [100,1000,10000,100000];
-burnIn        = [100,1000,10000,100000];
+d=25; %simulate 10 dimensional problem
+nSamplesTrain = 1000; %[100,1000,10000]; %generate 1000 data-points;
+nSamplesEval  = 1000; %[100,1000,10000,100000];
+burnIn        = 1000;  %[100,1000,10000,10000];
 thinning      = [1,1,1,1];
 modelTrue = 'ising_count_l_0';
 modelFit  = 'ising_count_l_0';
-newLambda = true;
-newData   = true;
+newLambda = false;
+newData   = false;
 
 if newLambda
  h=randn(d,1)-1; %generate random bias terms;
- J=randn(d); J=5*triu(J,1);%/sqrt(d); 
+ J=randn(d); J=triu(J,1)/sqrt(d); 
  %J=0*J;
  lambda=hJ2lambda(h,J);
  switch modelTrue
@@ -43,9 +43,10 @@ if newData
   x0 = double(rand(d,1)<EX);                           % entries of L,J
 
   xTrain = maxEnt_gibbs(nSamplesTrain(r), burnIn(r), thinning(r), ...
-                        lambdaTrue, x0, modelTrue);
-[fxTrain, fDescr] = setup_features_maxent(xTrain', modelFit);
-mfxTrain = mean(fxTrain, 1)';  
+                        lambdaTrue, x0, modelTrue, 'default', 'samples');
+mfxTrain = xTrain;
+%[fxTrain, fDescr] = setup_features_maxent(xTrain', modelFit);
+%mfxTrain = mean(fxTrain, 1)';  
  clear fxTrain
  % for comparison: evaluate independent model, i.e. J = 0,L = 0
  EX = mean(xTrain,2);
@@ -79,10 +80,10 @@ lambdaMPF = -lambdaMPF;
 %--------------------------------------------------------------------------
  disp('Generating data from model fit')
 % [~, x0] = max(logP); x0 = xTrain(:,x0);
-  xEval = maxEnt_gibbs(nSamplesEval(r), burnIn(r), thinning(r), ...
-                       lambdaMPF, x0, modelFit);
- fxEval = setup_features_maxent(xEval', modelFit);
-mfxEval = mean(fxEval, 1)';
+  mfxEval = maxEnt_gibbs_pair(nSamplesEval(r), burnIn(r), thinning(r), ...
+                       lambdaMPF, x0, modelFit, 'pair', 'means');
+% fxEval = setup_features_maxent(xEval', modelFit);
+%mfxEval = mean(fxEval, 1)';
  clear fxEval
 % compute true moments
 %--------------------------------------------------------------------------
