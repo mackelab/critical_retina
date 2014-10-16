@@ -11,7 +11,7 @@ y = W * x; % linear filtering for generating RGC input
 e = mvnrnd(zeros(1,n), Cn, N)'; % generate noise
 y = y + e; % add noise on level of RGC input
 
-y = 1 ./ (1 + exp(-y)); % compute RGC output firing probability
+y = 1 ./ (1 + exp(-y+2.944)); % compute RGC output firing probability
 
 out.spikes = (rand([n,N])<y);
 

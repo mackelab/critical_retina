@@ -3,15 +3,15 @@ clc
 
 % Simulation setup
 %--------------------------------------------------------------------------
-d=25; %simulate 10 dimensional problem
+d=10; %simulate 10 dimensional problem
 nSamplesTrain = 1000; %[100,1000,10000]; %generate 1000 data-points;
 nSamplesEval  = 1000; %[100,1000,10000,100000];
 burnIn        = 1000;  %[100,1000,10000,10000];
 thinning      = [1,1,1,1];
 modelTrue = 'ising_count_l_0';
 modelFit  = 'ising_count_l_0';
-newLambda = false;
-newData   = false;
+newLambda = true;
+newData   = true;
 
 if newLambda
  h=randn(d,1)-1; %generate random bias terms;
@@ -42,11 +42,10 @@ if newData
   EX = exp(lambdaTrue(1:d))./(1+exp(lambdaTrue(1:d))); % works ok for small
   x0 = double(rand(d,1)<EX);                           % entries of L,J
 
-  xTrain = maxEnt_gibbs(nSamplesTrain(r), burnIn(r), thinning(r), ...
+  xTrain = maxEnt_gibbs_pair(nSamplesTrain(r), burnIn(r), thinning(r), ...
                         lambdaTrue, x0, modelTrue, 'default', 'samples');
-mfxTrain = xTrain;
-%[fxTrain, fDescr] = setup_features_maxent(xTrain', modelFit);
-%mfxTrain = mean(fxTrain, 1)';  
+ [fxTrain, fDescr] = setup_features_maxent(xTrain', modelFit);
+ mfxTrain = mean(fxTrain, 1)';  
  clear fxTrain
  % for comparison: evaluate independent model, i.e. J = 0,L = 0
  EX = mean(xTrain,2);
@@ -81,10 +80,10 @@ lambdaMPF = -lambdaMPF;
  disp('Generating data from model fit')
 % [~, x0] = max(logP); x0 = xTrain(:,x0);
   mfxEval = maxEnt_gibbs_pair(nSamplesEval(r), burnIn(r), thinning(r), ...
-                       lambdaMPF, x0, modelFit, 'pair', 'means');
+                       lambdaMPF, x0, modelFit, 'rb', 'means');
 % fxEval = setup_features_maxent(xEval', modelFit);
 %mfxEval = mean(fxEval, 1)';
- clear fxEval
+% clear fxEval
 % compute true moments
 %--------------------------------------------------------------------------
 if d < 20

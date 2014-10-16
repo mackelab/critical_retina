@@ -65,12 +65,15 @@ S_f = (u.^2 + v.^2).^(BETA/2);
 S_f(S_f==inf) = 0;
 
 % Inverse Fourier transform to obtain the the spatial pattern
-x = zeros(DIM);
+x = zeros(DIM(1)*DIM(2), DIM(3));
 for i = 1:DIM(3)
  % Generate a grid of random phase shifts
- phi = rand(DIM(1:2));      
- x(:,:,i) = ifft2(S_f.^0.5 .* (cos(2*pi*phi)+i*sin(2*pi*phi)));
+ phi = randn(DIM(1:2));      
+ x(:,i) = vec(ifft2(S_f.^0.5 .* (cos(2*pi*phi)+i*sin(2*pi*phi))));
 end
 
 % Pick just the real component
 x = real(squeeze(x));
+if DIM(3)==1
+    x = reshape(x, DIM(1), DIM(2));
+end
