@@ -68,7 +68,7 @@ else    % Rao-Blackwellizing
  xSampled = ones(d, nSamples); % return Bernoulli probabilities
 end
 xc = logical(x0); % current sample, will be continuously updated throughout
-idl = sum(xc);    % current activity count, will also be updated throughout
+idl = sum(xc)+1;  % current activity count, will also be updated throughout
 for i = 1:thinning*nSamples+burnIn 
  ks = randperm(d); % one MCMC update equals one sweep through all d data- 
  for j = 1:d       % dimensions in random order
@@ -76,12 +76,12 @@ for i = 1:thinning*nSamples+burnIn
   
   % compute p(x_k = 0)
    idl = idl - xc(k);  % current activity count, x(k) IGNORED                
-   p0 = exp(L(idl+1)); % +1 because L(1) is for K=1, L(2) for K=2, etc.
+   p0 = exp(L(idl)); 
   % compute p(x_k = 1)
    xc1 = xc; xc1(k) = true; 
    p1(k) = exp( h(k) ...
            + sum( J( fm(xc1(pairs(m(:,k),1))&xc1(pairs(m(:,k),2)),k) ) )...
-           + L(idl+2)  ); % +2 because we now on top assume x(k) = 1
+           + L(idl+1)  ); % +1 because we now on top assume x(k) = 1
    p1(k)  = p1(k) / (p0 + p1(k)); % normalization step
  
   
