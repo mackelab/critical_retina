@@ -62,12 +62,12 @@ end
   J = 2*J(logical(tril(ones(size(J)),-1)));
   L = lambda(end-d:end);                     
   lambda = [ h(:); J(:); L(:) ];
-  
-   weights = 0; % currently cannot set them otherwise with this method. 
-   
-   fx = setup_features_maxent(x, 'ising_count_l_0');
-  [logP,logZ,~,fitmeans]= logPMaxEnt(fx,lambda,[],weights);
-  
+
+ % The following code is nice, but thends to bust memory for large (n,d)
+  %weights = 0; % currently cannot set them otherwise with this method.  
+  % fx = setup_features_maxent(x, 'ising_count_l_0');
+  %[logP,logZ,~,fitmeans]= logPMaxEnt(fx,lambda,[],weights);
+  logP = []; logZ = []; fitmeans = [];
 end
   
   

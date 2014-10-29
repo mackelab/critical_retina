@@ -167,6 +167,7 @@ for i = 1:thinning*nSamples+burnIn
    if ~mod(ii,1000)% normalize output every 1000 samples to avoid numerical 
     xSampled = ((ii-1000)*xSampled + xTmp)/ii; % issues with large numbers.
     xTmp = 0;
+    disp(['  - ', num2str(ii),'/',num2str(nSamples),'samples'])
    end
   end
  end
