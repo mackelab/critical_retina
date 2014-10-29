@@ -60,20 +60,21 @@ v = repmat(v,DIM(1),1);
 
 % Generate the power spectrum
 S_f = (u.^2 + v.^2).^(BETA/2);
-
+S_f = S_f.^0.5;
 % Set any infinities to zero
 S_f(S_f==inf) = 0;
-
 % Inverse Fourier transform to obtain the the spatial pattern
 x = zeros(DIM(1)*DIM(2), DIM(3));
-for i = 1:DIM(3)
+for j = 1:DIM(3)
  % Generate a grid of random phase shifts
- phi = randn(DIM(1:2));      
- x(:,i) = vec(ifft2(S_f.^0.5 .* (cos(2*pi*phi)+i*sin(2*pi*phi))));
+ phi = randn(DIM(1),DIM(2));      
+ x(:,j) = vec(ifft2(S_f .* (cos(2*pi*phi)+1i*sin(2*pi*phi))));
+ clear phi
 end
 
 % Pick just the real component
-x = real(squeeze(x));
+x = real(x);
+x = squeeze(x);
 if DIM(3)==1
     x = reshape(x, DIM(1), DIM(2));
 end
