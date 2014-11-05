@@ -1,4 +1,4 @@
-function [K, dK, Kfull] = K_dK_ising_PK( lambda, data )
+function [K, dK] = K_dK_ising_PK( lambda, data )
 % Objective function for minimum probability flow model fitting for Ising
 % models with additional terms ('K-pairwise maximum entropy models')
 
@@ -59,8 +59,7 @@ function [K, dK, Kfull] = K_dK_ising_PK( lambda, data )
     dL =  (1/2) * ( sum(         Kfull,         1) * indCount ...
                   - sum(   data.x   .*   Kfull, 1) * indCountPlus1 ...
                   - sum( (1-data.x) .*   Kfull, 1) * indCountMinu1 );
-
-
+    
     % Assemble output
     %------------------------------------------------------------
     K  = K  / n;

@@ -1,6 +1,6 @@
-nSamples = 10000; 
-burnIn=5000; 
-d = 50; 
+nSamples = 5000; 
+burnIn=100; 
+d = 25; 
 xc = randi(2,[d,1])-1; 
 pairs = nchoosek(1:d,2); 
 h = randn(d,1);  
@@ -20,14 +20,15 @@ end
 clear tmp
 %%
 tic 
-[xSampledC] = test3(int32(nSamples),int32(burnIn),int32(d),xc,pairs-1,m,fm-1,h,J,L);
+[xSampledC] = pwGibbsMaxEnt_malloc(int32(nSamples), int32(burnIn), int32(d), ...
+                    xc, pairs-1, m, fm-1, h, J, L);
 toc
 %%
 tic
 [xSampled, E] = GibbsLoop(nSamples,burnIn,d,xc,pairs,m,fm,h,J,L);
 toc
 %%
-[xSampledC,xSampled];
+%[xSampledC,xSampled];
 %%
 figure(3); 
 plot(xSampled, 'go-'), hold on; plot(xSampledC, 'ro-'), hold off;

@@ -1,4 +1,4 @@
-function [xSampled,E] = maxEnt_gibbs_pair_C(nSamples, burnIn, lambda, x0)
+function [xSampled,E,xc] = maxEnt_gibbs_pair_C(nSamples, burnIn, lambda, x0, machine)
 % input:
 % -nSamples: number of Gibbs samples to be generated
 % -  burnIn: number of to-be-discarded samples from beginning of MCMC chain
@@ -7,6 +7,10 @@ function [xSampled,E] = maxEnt_gibbs_pair_C(nSamples, burnIn, lambda, x0)
 % -      x0: EITHER a d-by-1 vector for initial member of the MCMC,
 %            OR a single number specifing the dimensionality of data d
 %            In the latter case, initial chain member will be drawn.
+
+if nargin < 5 || isempty(machine)
+    machine = 'laptop';
+end
 
 % Input formatting:
 %--------------------------------------------------------------------------
@@ -42,7 +46,19 @@ pairs=nchoosek(1:d,2); % needed to quickly compute the features of data x
 %--------------------------------------------------------------------------
 xc = logical(x0); % current sample, will be continuously updated throughout
 
-[xSampled,E] = GibbsLoop(nSamples,burnIn,d,xc,pairs,m,fm,h,J,L);
+%[xSampled,E] = pwGibbsWrapper(nSamples,burnIn,d,xc,pairs,m,fm,h,J,L); % MEX
+switch machine
+    case 'cluster'
+[xSampled,xc] = pwGibbsMaxEnt_cluster(int32(nSamples),int32(burnIn),int32(d),...
+                                   xc, pairs-1, m, fm-1, h, J, L);
+    case 'laptop'
+[xSampled,xc] = pwGibbsMaxEnt_malloc(int32(nSamples),int32(burnIn),int32(d),...
+                                   xc, pairs-1, m, fm-1, h, J, L);
+    otherwise
+[xSampled,xc] = pwGibbsMaxEnt_malloc(int32(nSamples),int32(burnIn),int32(d),...
+                                   xc, pairs-1, m, fm-1, h, J, L);
+end
+E = [];                              
 end
 
 
