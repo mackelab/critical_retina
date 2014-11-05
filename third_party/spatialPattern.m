@@ -42,6 +42,11 @@ function x = spatialPattern(DIM,BETA)
 % S_f corrected to be S_f = (u.^2 + v.^2).^(BETA/2);  2/10/05
 
 % Altered by Marcel Nonnenmacher, October 2014
+% - mostly allowed quickly generating a series of imaging instead of 
+%   having to call the function anew for each single pattern.
+% - replaced uniform noise distribution with standard Gaussian distr.
+% - slight speed up through pulling Sf.^0.5 out of the for-loop
+
 if max(size(DIM))==2
   DIM(3) = 1;
 end
@@ -60,7 +65,12 @@ v = repmat(v,DIM(1),1);
 
 % Generate the power spectrum
 S_f = (u.^2 + v.^2).^(BETA/2);
-S_f = S_f.^0.5;
+S_f = S_f.^0.5;% this one is something I'm not sure if it belongs here: was
+               % in the original code, but has been criticized as an error
+               % on stack exchange. At most, it should effectively half
+               % alpha, turning e.g. brown (alpha=2) into pink (alpha=1)
+               % noise. Just try doubling alpha if in doubt.
+               %  - Marcel 
 % Set any infinities to zero
 S_f(S_f==inf) = 0;
 % Inverse Fourier transform to obtain the the spatial pattern

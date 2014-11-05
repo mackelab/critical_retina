@@ -12,9 +12,11 @@ function [out] = retSim(x, W, pars)
 [n,d] = size(W);
 [~,N] = size(x);
 
-y = W * x; % linear filtering for generating RGC input
-e = mvnrnd(zeros(1,n), pars.Ce, N)'; % generate noise
-y = y + e; % add noise on level of RGC input
+e = mvnrnd(zeros(1,d), pars.Ce, N)'; % generate noise
+y = W * (x+e); % linear filtering for generating RGC input
+
+%e = mvnrnd(zeros(1,n), pars.Ce, N)'; % generate noise
+%y = y + e; % add noise on level of RGC output
 
 % compute RGC output firing probability
 y = pars.magnitude ./ (1 + exp(-(y+pars.offset)/pars.gain)); 

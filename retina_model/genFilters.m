@@ -50,8 +50,8 @@ YX = [vec((ones(d(2),1) * (1:d(1)))'), vec((ones(d(1),1) * (1:d(2))))];
 
 switch mode.tiling
     case 'random'
-      RGCcen(1,:) = rand(1,n)*d(1);
-      RGCcen(2,:) = rand(1,n)*d(2);
+      RGCcen(1,:) = ((0.8*rand(1,n))+0.1)*d(1);
+      RGCcen(2,:) = ((0.8*rand(1,n))+0.1)*d(2);
     case 'lattice'
       cy = round(linspace(1, d(1), ceil(sqrt(n))));
       cx = round(linspace(1, d(2), ceil(sqrt(n))));
@@ -66,6 +66,7 @@ switch mode.RF
      for i = 1:n
        W(:,i) = pars.hight(i,1)*mvnpdf(YX,RGCcen(:,i)',pars.Sigma{i,1})...
               - pars.hight(i,2)*mvnpdf(YX,RGCcen(:,i)',pars.Sigma{i,2}); 
+          
      end
      W = W';
      W(abs(W)<pars.thres) = 0;
