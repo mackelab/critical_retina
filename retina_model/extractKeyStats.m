@@ -11,8 +11,8 @@ if mod(size(data.spikes,2),Nc)~=0
     error('data not consistent with N repetitions of a stimulus of length Nc')
 end
 
-n = size(data.spikes,1);
-N = size(data.spikes,2);
+n = size(data.spikes,1); % number of cells
+N = size(data.spikes,2); % total length of stimulus presentation
 data.spikes = reshape(data.spikes, [n, Nc, N/Nc]);
 
 cRange = -0.1:0.01:0.6;
