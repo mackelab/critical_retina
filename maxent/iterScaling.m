@@ -13,25 +13,26 @@ else                  % if feeding expectation of features E[f(X)] directly
 end
 clear fxTrain % may take a whole lot of memory 
 
-idxBad = (Efx == 0);
 
 if ~isempty(fitoptions.lambda0) && size(fitoptions.lambda0,2) ~= fitoptions.nRestart
   fitoptions.lambda0=repmat(fitoptions.lambda0(:,1),1,fitoptions.nRestart);
-end
+end % copy initialization for every run if not already provided
 
-x0 = n; 
+idxBad = (Efx == 0); % identify pathological cases where lambda_i -> -Inf
 
-%Efx(n*(n+1)/2+1) = [];                                                                   %TEST
-%fitoptions.lambda0(n*(n+1)/2+1) = [];                                                    %TEST
 
+x0 = n; % setting the very first chain element to a number will get the
+        % Gibbs sampler to randomly draw the chain initialization itself
+        
 %% 2. Start the update iteration
 %------------------------------------------
 lambdaHat = zeros(length(Efx),fitoptions.maxIter+1);
-d = zeros(fitoptions.maxIter,1);
-idxj = zeros(fitoptions.maxIter,1);
-deltas = zeros(size(lambdaHat));
-deltaLLs = zeros(fitoptions.maxIter,1);
+idxj = zeros(fitoptions.maxIter,1); % keeps track of updated dimensions
+deltas = zeros(size(lambdaHat));    % keeps track of optimal step sizes
+deltaLLs = zeros(fitoptions.maxIter,1); % keeps track of LL improvements
 for r = 1:fitoptions.nRestart
+    
+  % generate / load parameter initialization
   if isempty(fitoptions.lambda0) || size(fitoptions.lambda0,1) ~= size(lambdaHat,1)
     lambdaHat(:,1) = [randn(n,1);randn(n*(n-1)/2,1)/sqrt(n);randn(n+1,1)];                %TEST
   else
@@ -40,27 +41,40 @@ for r = 1:fitoptions.nRestart
   
   lambdaHat(idxBad,1) = 0;    % Set those parameters for features f_i with
   lambdaHat(n*(n+1)/2+1) = 0; % E[f_i]=0 and the feature for K=0 to zero 
-    
-  for iter = 2:fitoptions.maxIter+1
-   disp([num2str(iter-1), '/' num2str(fitoptions.maxIter)])
-    lambdaHat(:,iter)  = lambdaHat(:,iter-1);
-    [Efy,~,x0] = maxEnt_gibbs_pair_C(fitoptions.nSamples, fitoptions.burnIn, lambdaHat(:,iter), x0, fitoptions.machine);
-    
-    %for innerIter = 1:fitoptions.maxInnerIter
-    delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
-    deltas(:,iter) = delta;
 
+% MAIN LOOP
+
+  for iter = 2:fitoptions.maxIter+1
+      
+    disp([num2str(iter-1), '/' num2str(fitoptions.maxIter)])
+   
+    lambdaHat(:,iter)  = lambdaHat(:,iter-1);
+    [Efy,~,x0] = maxEnt_gibbs_pair_C(fitoptions.nSamples, ...
+             fitoptions.burnIn, lambdaHat(:,iter), x0, fitoptions.machine);
     
+    %for innerIter = 1:fitoptions.maxInnerIter % using sample Y several times
+    
+    % Compute optimal candidate step lengths for each dimension of lambda
+    delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
+    deltas(:,iter-1) = delta; % store for debugging purposes
+
+    % Compute gains in log-likelihood for these candidate updates
     deltaLL= - delta .* Efx + log( 1 + (exp(delta)-1) .* Efy ) ; 
     deltaLL(idxBad)      = Inf; % do not update 'bad' components of lambda
-    deltaLL(n*(n+1)/2+1) = Inf;
+    deltaLL(n*(n+1)/2+1) = Inf; % or the weight of the feature for K=0
     
-    [~, idxj(iter)] = min(deltaLL);   
+    % Pick candidate update that gives hight gain
+    [~, idxj(iter)] = min(deltaLL); % minimizing NEGATIVE log-likelihood  
+    deltaLLs(iter-1) = deltaLL(idxj(iter)); % store for debugging purposes
     
+    % Update correct component of parameter vector lambda
     lambdaHat(idxj(iter),iter) = lambdaHat(idxj(iter),iter) + delta(idxj(iter)); 
     
     %end
-  end
+    
+  end % END MAIN LOOP
+  
+% Final step to enforce updating all components of lambda:  
 %  [Efy,~,x0] = maxEnt_gibbs_pair_C(10*fitoptions.nSamples, fitoptions.burnIn, lambdaHat(:,fitoptions.maxIter), x0, fitoptions.machine);
 %   delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
 %   idxGood = delta<0 & ~idxBad;
