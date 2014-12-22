@@ -15,6 +15,9 @@ if nargin<=3 fitoptions=[]; end
 %weights,i.e. fit P(K=k)=1/Z exp(h*k+ weight(k)) for fixed weights.
 lognchoosek=(gammaln(N+1)-gammaln((0:N)+1)-gammaln(N-(0:N)+1))';
 [lambda,count_distrib_check,model]=fit_flat_maxent_model(count_distrib);
+
+lambda(lambda==-Inf) = -1000;
+
 weights=beta*[0;lambda]+lognchoosek;
 
 x=[0:N]';

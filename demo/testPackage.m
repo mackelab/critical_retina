@@ -4,7 +4,7 @@ clc
 
 % Simulation setup
 %--------------------------------------------------------------------------
-d=10; %simulate 10 dimensional problem
+d=8; %simulate 10 dimensional problem
 nSamplesTrain = 10000; %[100,1000,10000]; %generate 1000 data-points;
 nSamplesEval  = 10000; %[100,1000,10000,100000];
 burnIn        = 1000;  %[100,1000,10000,10000];
@@ -93,7 +93,7 @@ switch trainMethod
     %fitoptions.lambda0(end-d:end) = 0;
     
     fitoptions.lambda0 = [];
-    fitoptions.maxIter = 300;
+    fitoptions.maxIter = 100;
     fitoptions.maxInnerIter = 1;
     fitoptions.nSamples = 100000; 
     fitoptions.burnIn   = 1000;

@@ -1,5 +1,31 @@
-function [lambdaHat, fitDiagnostics] = iterScaling(xTrain, fitoptions)
-% code for fitting a maxEnt model with (improved?) iterative scaling
+function [lambdaHat, fD] = iterScaling(xTrain, fitoptions)
+% code for fitting a maxEnt model with (improved?) iterative scaling.
+% Minimizes the negative log-likelihood of the data in xTrain under the 
+% maximum entropy model by (blockwise) coordinate descent. 
+% 
+% input:
+%   xTrain:     n-by-N matrix of N many n-dimensional training patterns x 
+%               OR #features-by-1 vector of sample means E_emp[f(X)]
+%   fitoptions: structure containing options for the fitting procedure
+%      .modelFit:  string that specifies which model was used. 
+%      .lambda0:   #features-by-1 vector of initial values for lambda
+%      .nRestarts: number of complete algorithm restarts (test convexity)
+%      .maxIter:   maximal number of allowed main loop iterations
+%      .maxInnerIter: maximum number of allowed inner loop iterations
+%      .nSamples:  number of Gibbs samples for each new MCMC sample
+%      .burnIn  :  number of Gibbs samples to be discarded from MCMC sample
+%      .machine :  string specifying which Gibbs implementation is used
+% output:
+%   lamdaHat:   #features-by-1 vector of lambda as estimated from data
+%   fD:         structure containing several fitting diagnostics 
+%      .deltaLL:     full sequence of changes in negative log-likelihood
+%      .idxBad:      list of 'bad' feature dimensions (where E[f_i(X)] = 0)
+%      .lambdaTrace: all intermediate estimates of lambda
+%      .idxUpdate:   sequence of dimensions of lambda updated during fit
+%      .deltas:      all candidate optimal update step sizes
+%      .Efx:         sought-after data means E_emp[f(X)]
+%      .Efy:         actually returned model means E_lambda[f(X)] 
+
 
 % 1. Input formatting and pre-computations
 %------------------------------------------
@@ -13,6 +39,9 @@ else                  % if feeding expectation of features E[f(X)] directly
 end
 clear fxTrain % may take a whole lot of memory 
 
+Efxh = Efx(1:n);               % appears wise to split the feature
+EfxJ = Efx((n+1):(n*(n+1)/2)); % dimensions of f(X) up according to the
+EfxV = Efx((end-n):end);       % upcoming block of coordindate descent
 
 if ~isempty(fitoptions.lambda0) && size(fitoptions.lambda0,2) ~= fitoptions.nRestart
   fitoptions.lambda0=repmat(fitoptions.lambda0(:,1),1,fitoptions.nRestart);
@@ -20,9 +49,8 @@ end % copy initialization for every run if not already provided
 
 idxBad = (Efx == 0); % identify pathological cases where lambda_i -> -Inf
 
-
-x0 = n; % setting the very first chain element to a number will get the
-        % Gibbs sampler to randomly draw the chain initialization itself
+x0 = n; % setting the very first chain element to a number will urge the
+        % Gibbs sampler to randomly draw the chain initialization by itself
         
 %% 2. Start the update iteration
 %------------------------------------------
@@ -34,7 +62,7 @@ for r = 1:fitoptions.nRestart
     
   % generate / load parameter initialization
   if isempty(fitoptions.lambda0) || size(fitoptions.lambda0,1) ~= size(lambdaHat,1)
-    lambdaHat(:,1) = [randn(n,1);randn(n*(n-1)/2,1)/sqrt(n);randn(n+1,1)];                %TEST
+    lambdaHat(:,1) = [randn(n,1);randn(n*(n-1)/2,1)/sqrt(n);randn(n+1,1)];            
   else
     lambdaHat(:,1) = fitoptions.lambda0;                                                 
   end
@@ -51,15 +79,26 @@ for r = 1:fitoptions.nRestart
     lambdaHat(:,iter)  = lambdaHat(:,iter-1);
     [Efy,~,x0] = maxEnt_gibbs_pair_C(fitoptions.nSamples, ...
              fitoptions.burnIn, lambdaHat(:,iter), x0, fitoptions.machine);
+    % returning x0 (now a full n-by-1 vector) for use as initial element of
+    % the next Gibbs chain, assuming that the distributions do not change 
+    % much from one iteration to the next. 
+    Efyh = Efy(1:n);               % appears wise to split the feature
+    EfyJ = Efy((n+1):(n*(n+1)/2)); % dimensions of f(Y) up according to the
+    EfyV = Efy((end-n):end);       % upcoming block of coordindate descent
     
     %for innerIter = 1:fitoptions.maxInnerIter % using sample Y several times
     
     % Compute optimal candidate step lengths for each dimension of lambda
-    delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
-    deltas(:,iter-1) = delta; % store for debugging purposes
+    deltah = log( (Efxh ./ ( 1 - Efxh )) .* ...
+                  (1-Efyh+(exp(deltah(j)
+    deltaJ = log( (EfxJ .* ( 1 - EfyJ )) ./ (EfyJ .* ( 1 - EfxJ )) );
+    deltaV = 0;                                                                      % FILL IN HERE
+    deltas(1:n) = deltah;                      % store 
+    deltas((n+1):(n*(n+1)/2),iter-1) = deltaJ; % for debugging 
+    deltas((end-n):end) = deltaV;              % purposes
 
     % Compute gains in log-likelihood for these candidate updates
-    deltaLL= - delta .* Efx + log( 1 + (exp(delta)-1) .* Efy ) ; 
+    deltaLL = - delta .* Efx + log( 1 + (exp(delta)-1) .* Efy ) ; 
     deltaLL(idxBad)      = Inf; % do not update 'bad' components of lambda
     deltaLL(n*(n+1)/2+1) = Inf; % or the weight of the feature for K=0
     
@@ -84,15 +123,14 @@ for r = 1:fitoptions.nRestart
 %   lambdaHat(:,end) = lambdaHat(:,fitoptions.maxIter) + delta; 
 end
 
-fitDiagnostics.deltaLL = deltaLL;
-fitDiagnostics.lambdaTrace = lambdaHat(:,2:end); 
-fitDiagnostics.idxUpdate = idxj(2:end);
-fitDiagnostics.sizeUpdate = d; 
-fitDiagnostics.deltas = deltas;
-fitDiagnostics.idxBad = idxBad;
-fitDiagnostics.Efx = Efx; % what we tried to achieve
-fitDiagnostics.Efy = Efy; % what we did achieve
 lambdaHat = lambdaHat(:,fitoptions.maxIter);
+fD.deltaLL = deltaLL;
+fD.lambdaTrace = lambdaHat(:,2:end); 
+fD.idxUpdate = idxj(2:end);
+fD.deltas = deltas;
+fD.idxBad = idxBad;
+fD.Efx = Efx; % what we tried to achieve
+fD.Efy = Efy; % what we did achieve
 
 % figure; 
 % subplot(2,3,1),

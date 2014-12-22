@@ -1,17 +1,16 @@
 %
-close all
+%close all
 clear all
 
-N=200; %100 neurons
-Nsamples=100; %1000 samples
-mu=.1; %probability of spike per neuron
-rho=.2; %pairwise correlation between neurons
+N=334; %100 neurons
+Nsamples=1000; %1000 samples
+mu=0.024; %probability of spike per neuron
+rho=.1; %pairwise correlation between neurons
 
-betas=10.^[-.1:.001:.1];
-set(gcf,'DefaultAxesColorOrder',jet(round(numel(betas(1:10:end)))));
+betas=10.^[-.1:.002:.1];
 
 [gamma,lambda,DG_probs,dg_model]=fit_flat_dg(mu,rho,N);
-[s]=sample_flat_model(DG_probs,Nsamples);
+%[s]=sample_flat_model(DG_probs,Nsamples);
     
 [lambda,maxent_probs,maxent_model]=fit_flat_maxent_model(dg_model.count_distrib);
 [maxent_s]=sample_flat_model(maxent_probs,Nsamples);
@@ -22,6 +21,8 @@ set(gcf,'DefaultAxesColorOrder',jet(round(numel(betas(1:10:end)))));
 
 
 %%
+set(gcf,'DefaultAxesColorOrder',jet(round(numel(betas(1:10:end)))));
+figure;
 
 subplot(2,4,1)
 semilogy([0:N],dg_model.count_distrib,'linewidth',2); 

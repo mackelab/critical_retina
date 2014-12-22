@@ -1,4 +1,4 @@
-function [count_distribs,Zs,models]=flat_model_trace_temp(count_distrib,betas,fix_mean);
+function [count_distribs,Zs,models,h]=flat_model_trace_temp(count_distrib,betas,fix_mean)
 %fiven a model with specificed spike-count distribution, calculate
 %spike-count distributions for different inverse temperatures beta;
 %
@@ -21,7 +21,7 @@ if ~fix_mean
 else
     mean_rate=calc_mean_var(count_distrib)/(numel(count_distrib)-1);
     for k=1:numel(betas);
-        [h,logZ,count_distribs(k,:),locmodel]=flat_model_vary_temp_fix_mean(mean_rate,count_distrib,betas(k));
+        [h(k),logZ,count_distribs(k,:),locmodel]=flat_model_vary_temp_fix_mean(mean_rate,count_distrib,betas(k));
         locmodel.beta=betas(k);
         models(k)=locmodel;
         Zs(k)=exp(logZ);    
