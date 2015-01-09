@@ -4,7 +4,7 @@ clc
 
 % Simulation setup
 %--------------------------------------------------------------------------
-d=8; %simulate 10 dimensional problem
+d=15; %simulate 10 dimensional problem
 nSamplesTrain = 10000; %[100,1000,10000]; %generate 1000 data-points;
 nSamplesEval  = 10000; %[100,1000,10000,100000];
 burnIn        = 1000;  %[100,1000,10000,10000];
@@ -14,6 +14,9 @@ modelFit  = 'ising_count_l_0';
 trainMethod = 'iterativeScaling';
 newLambda = true;
 newData   = true;
+
+s = RandStream('mcg16807','Seed',0)
+RandStream.setDefaultStream(s)
 
 if newLambda
  h=randn(d,1)-1; %generate random bias terms;
@@ -92,16 +95,18 @@ switch trainMethod
     %fitoptions.lambda0 = lambdaTrue;
     %fitoptions.lambda0(end-d:end) = 0;
     
-    fitoptions.lambda0 = [];
-    fitoptions.maxIter = 100;
+    fitoptions.regular = 'l1';
+    fitoptions.lambda0 = []; %zeros(size(lambdaTrue));
+    fitoptions.maxIter = 200;
     fitoptions.maxInnerIter = 1;
-    fitoptions.nSamples = 100000; 
+    fitoptions.nSamples = 10000; 
     fitoptions.burnIn   = 1000;
     fitoptions.machine  = 'laptop';
     fitoptions.nRestart = 1;
     fitoptions.modelFit = modelFit;
-      
-    [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions);
+     
+    beta = 0.001*ones(size(lambdaTrue));
+    [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions, beta);
 end
 % validate model
 %--------------------------------------------------------------------------
@@ -276,7 +281,7 @@ if strcmp(trainMethod, 'iterativeScaling')
  plot(fitDiagnostics.Efy, 'co-');
  axis([-1,length(fitDiagnostics.Efx)+1, 0, max([fitDiagnostics.Efx;fitDiagnostics.Efy])]);
  subplot(2,3,4),
- plot(fitDiagnostics.sizeUpdate); box off; 
+ plot(fitDiagnostics.deltaLL); box off; 
  subplot(2,3,5),
  plot(fitDiagnostics.idxUpdate); box off;
  subplot(2,3,6)
@@ -291,7 +296,7 @@ if strcmp(trainMethod, 'iterativeScaling')
  end
 end
 %%
-if d <= 10
+if d <= 15
     figure;
     [logP,logZ,P, means]=logPMaxEnt(d,lambdaTrue,[], 0, 'ising_count_l_0');
     subplot(2,2,1)

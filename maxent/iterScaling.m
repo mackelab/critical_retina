@@ -1,4 +1,4 @@
-function [lambdaHat, fD] = iterScaling(xTrain, fitoptions)
+function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta)
 % code for fitting a maxEnt model with (improved?) iterative scaling.
 % Minimizes the negative log-likelihood of the data in xTrain under the 
 % maximum entropy model by (blockwise) coordinate descent. 
@@ -7,7 +7,8 @@ function [lambdaHat, fD] = iterScaling(xTrain, fitoptions)
 %   xTrain:     n-by-N matrix of N many n-dimensional training patterns x 
 %               OR #features-by-1 vector of sample means E_emp[f(X)]
 %   fitoptions: structure containing options for the fitting procedure
-%      .modelFit:  string that specifies which model was used. 
+%      .modelFit:  string that specifies which model was used
+%      .regular:   string that specifies which regularization is to beused
 %      .lambda0:   #features-by-1 vector of initial values for lambda
 %      .nRestarts: number of complete algorithm restarts (test convexity)
 %      .maxIter:   maximal number of allowed main loop iterations
@@ -38,6 +39,15 @@ else                  % if feeding expectation of features E[f(X)] directly
  Efx = xTrain;
 end
 clear fxTrain % may take a whole lot of memory 
+
+if nargin < 3
+  beta = zeros(size(Efx));
+end
+
+if any(beta >= Efx | beta >= 1-Efx)
+  beta(beta>Efx) = 0.9* min([1-Efx(beta>Efx),Efx(beta>Efx)],[],2); 
+  disp('Warning: Some of the regularizers \beta_j were chosen larger than E[f_j(X)]! Had to shrink them')
+end
 
 Efxh = Efx(1:n);               % appears wise to split the feature
 EfxJ = Efx((n+1):(n*(n+1)/2)); % dimensions of f(X) up according to the
@@ -89,26 +99,68 @@ for r = 1:fitoptions.nRestart
     %for innerIter = 1:fitoptions.maxInnerIter % using sample Y several times
     
     % Compute optimal candidate step lengths for each dimension of lambda
-    deltah = log( (Efxh ./ ( 1 - Efxh )) .* ...
-                  (1-Efyh+(exp(deltah(j)
-    deltaJ = log( (EfxJ .* ( 1 - EfyJ )) ./ (EfyJ .* ( 1 - EfxJ )) );
-    deltaV = 0;                                                                      % FILL IN HERE
-    deltas(1:n) = deltah;                      % store 
-    deltas((n+1):(n*(n+1)/2),iter-1) = deltaJ; % for debugging 
-    deltas((end-n):end) = deltaV;              % purposes
+    switch fitoptions.regular
+        case 'none' % immediately done
+          delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
+        case 'l1'
+          delta0 = log( (1-Efy) ./ Efy ); % shows up twice below
 
+          delta =      delta0     + log( (Efx-beta)./(1 - Efx + beta) );
+          ic = (delta <= -lambdaHat(:,iter)); 
+
+          delta(ic) =  delta0(ic) + log( (Efx(ic)+beta(ic))./(1-Efx(ic)-beta(ic)));
+          ic = (ic & (delta >= -lambdaHat(:,iter)));
+          delta(ic) = -lambdaHat(ic,iter);
+        otherwise   % do nothing as for no regularization, but warn       
+          delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );            
+          disp('Unknown regularization chosen. Solution not regularized')
+    end
+
+    
+    deltas(:,iter-1) = delta;
+    
+    % Preliminary code for block-wise updates
+    %deltah = log( (Efxh ./ ( 1 - Efxh )) .* ...
+    %              (1-Efyh+(exp(deltah(j)))) );
+    %deltaJ = log( (EfxJ .* ( 1 - EfyJ )) ./ (EfyJ .* ( 1 - EfxJ )) );
+    %deltaV = 0;                                                                      % FILL IN HERE
+    %deltas(1:n) = deltah;                      % store 
+    %deltas((n+1):(n*(n+1)/2),iter-1) = deltaJ; % for debugging 
+    %deltas((end-n):end) = deltaV;              % purposes
+    
     % Compute gains in log-likelihood for these candidate updates
-    deltaLL = - delta .* Efx + log( 1 + (exp(delta)-1) .* Efy ) ; 
+    deltaLL = - delta .* Efx + log( 1 + (exp(delta)-1) .* Efy ) ;     
+    switch fitoptions.regular
+        case 'none' % immediately done
+        case 'l1'
+          deltaLL = deltaLL + ...
+           beta .* (abs(lambdaHat(:,iter)+delta) - abs(lambdaHat(:,iter))); 
+        otherwise   % do nothing as for no regularization, but warn          
+          disp('Unknown regularization chosen. Solution not regularized')
+    end
     deltaLL(idxBad)      = Inf; % do not update 'bad' components of lambda
     deltaLL(n*(n+1)/2+1) = Inf; % or the weight of the feature for K=0
     
-    % Pick candidate update that gives hight gain
+    % Pick candidate update that gives highest gain
     [~, idxj(iter)] = min(deltaLL); % minimizing NEGATIVE log-likelihood  
     deltaLLs(iter-1) = deltaLL(idxj(iter)); % store for debugging purposes
     
+    
     % Update correct component of parameter vector lambda
     lambdaHat(idxj(iter),iter) = lambdaHat(idxj(iter),iter) + delta(idxj(iter)); 
-    
+
+    if ismember(idxj(iter), find(ic))
+        disp(['l1 set weight ', num2str(idxj(iter)), 'to 0!'])
+        disp(num2str(lambdaHat(idxj(iter),iter)))
+        disp(num2str(delta(idxj(iter))))
+        disp('--- deltaLL:')
+        disp(num2str(deltaLL))
+        disp('--- delta: ')
+        disp(num2str(delta))
+        disp('--- Efy: ')
+        disp(num2str(Efy))
+    end
+
     %end
     
   end % END MAIN LOOP
@@ -123,14 +175,17 @@ for r = 1:fitoptions.nRestart
 %   lambdaHat(:,end) = lambdaHat(:,fitoptions.maxIter) + delta; 
 end
 
-lambdaHat = lambdaHat(:,fitoptions.maxIter);
 fD.deltaLL = deltaLL;
+fD.deltaLLs = deltaLLs;
 fD.lambdaTrace = lambdaHat(:,2:end); 
 fD.idxUpdate = idxj(2:end);
 fD.deltas = deltas;
 fD.idxBad = idxBad;
 fD.Efx = Efx; % what we tried to achieve
 fD.Efy = Efy; % what we did achieve
+
+fD.lambdaInit = lambdaHat(:,1);
+lambdaHat = lambdaHat(:,fitoptions.maxIter+1);
 
 % figure; 
 % subplot(2,3,1),
