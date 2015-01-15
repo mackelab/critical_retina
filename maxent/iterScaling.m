@@ -45,13 +45,13 @@ if nargin < 3
 end
 
 if any(beta >= Efx | beta >= 1-Efx)
-  beta(beta>Efx) = 0.9* min([1-Efx(beta>Efx),Efx(beta>Efx)],[],2); 
-  disp('Warning: Some of the regularizers \beta_j were chosen larger than E[f_j(X)]! Had to shrink them')
+  %beta(beta>Efx) = 0.9* min([1-Efx(beta>Efx),Efx(beta>Efx)],[],2); 
+  disp('Warning: Some of the regularizers \beta_j were chosen larger than E[f_j(X)]!')
 end
 
-Efxh = Efx(1:n);               % appears wise to split the feature
-EfxJ = Efx((n+1):(n*(n+1)/2)); % dimensions of f(X) up according to the
-EfxV = Efx((end-n):end);       % upcoming block of coordindate descent
+%Efxh = Efx(1:n);               % appears wise to split the feature
+%EfxJ = Efx((n+1):(n*(n+1)/2)); % dimensions of f(X) up according to the
+%EfxV = Efx((end-n):end);       % upcoming block of coordindate descent
 
 if ~isempty(fitoptions.lambda0) && size(fitoptions.lambda0,2) ~= fitoptions.nRestart
   fitoptions.lambda0=repmat(fitoptions.lambda0(:,1),1,fitoptions.nRestart);
@@ -92,9 +92,9 @@ for r = 1:fitoptions.nRestart
     % returning x0 (now a full n-by-1 vector) for use as initial element of
     % the next Gibbs chain, assuming that the distributions do not change 
     % much from one iteration to the next. 
-    Efyh = Efy(1:n);               % appears wise to split the feature
-    EfyJ = Efy((n+1):(n*(n+1)/2)); % dimensions of f(Y) up according to the
-    EfyV = Efy((end-n):end);       % upcoming block of coordindate descent
+    %Efyh = Efy(1:n);               % appears wise to split the feature
+    %EfyJ = Efy((n+1):(n*(n+1)/2)); % dimensions of f(Y) up according to the
+    %EfyV = Efy((end-n):end);       % upcoming block of coordindate descent
     
     %for innerIter = 1:fitoptions.maxInnerIter % using sample Y several times
     
@@ -103,14 +103,19 @@ for r = 1:fitoptions.nRestart
         case 'none' % immediately done
           delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
         case 'l1'
-          delta0 = log( (1-Efy) ./ Efy ); % shows up twice below
-
+          delta0 = log( (1-Efy) ./ Efy ); % shows up twice below,
+                                          % so compute once and store
+          % \delta_+ part                                
           delta =      delta0     + log( (Efx-beta)./(1 - Efx + beta) );
-          ic = (delta <= -lambdaHat(:,iter)); 
-
+          % find out where using \delta_+ is NOT appropriate
+          ic = (beta >= Efx) | (delta <= -lambdaHat(:,iter)); 
+          % \delta_- part
           delta(ic) =  delta0(ic) + log( (Efx(ic)+beta(ic))./(1-Efx(ic)-beta(ic)));
-          ic = (ic & (delta >= -lambdaHat(:,iter)));
+          % find out where using \delta_+ OR \delta_- is NOT appropriate
+          ic = (ic & ((beta >= 1-Efx) | (delta >= -lambdaHat(:,iter))) );
+          % \delta_0 part
           delta(ic) = -lambdaHat(ic,iter);
+          
         otherwise   % do nothing as for no regularization, but warn       
           delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );            
           disp('Unknown regularization chosen. Solution not regularized')
@@ -133,12 +138,12 @@ for r = 1:fitoptions.nRestart
     switch fitoptions.regular
         case 'none' % immediately done
         case 'l1'
-          deltaLL = deltaLL + ...
+          deltaLL = deltaLL + ... % add regularization terms
            beta .* (abs(lambdaHat(:,iter)+delta) - abs(lambdaHat(:,iter))); 
         otherwise   % do nothing as for no regularization, but warn          
           disp('Unknown regularization chosen. Solution not regularized')
     end
-    deltaLL(idxBad)      = Inf; % do not update 'bad' components of lambda
+    deltaLL(idxBad)      = Inf; % never update 'bad' components of lambda
     deltaLL(n*(n+1)/2+1) = Inf; % or the weight of the feature for K=0
     
     % Pick candidate update that gives highest gain
