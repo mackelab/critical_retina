@@ -206,26 +206,26 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
         pc[numAll-1] /= numPair; // final entry for L (d+1 entries!)
         
         /* shove results to mid-term storage and final outputs */
-		if (i > 0) {          //* after burn-in phase is over:
+	if (i > 0) {          //* after burn-in phase is over:
         	for (idx =0; idx<numAll; idx++) {// copy into mid-term storage
-        		xTmp[idx] += pc[idx]; // adds up results from 1000 sweeps 
-            }                         // before passing on to xSampled
+        		xTmp[idx] += pc[idx]; // adds up results from 100 sweeps 
+                }                         // before passing on to xSampled
             
-        	if ((i % 1000) == 0) {    // every thousand samples ...
+        	if ((i % 100) == 0) {    // every hundred sweeps ...
             	for (idx = 0; idx<numAll; idx++) { // move to final results 
-            		xSampled[idx] = ((i-1000)*xSampled[idx] + xTmp[idx])/i;	
+            		xSampled[idx] = ((i-100)*xSampled[idx] + xTmp[idx])/i;	
             		xTmp[idx] = 0; // (normalize regularly to avoid 
             	}                  //  numerical overflows)
                 //mexPrintf("\nCurrent sample is # %d ", i);   
                 //mexPrintf(" out of %d .", nSamples);   
         	}
         }
-        else { // give status reports also during burn-in phase
-            if (((i+burnIn) % 100) == 0) {
+        //else { // give status reports also during burn-in phase
+        //    if (((i+burnIn) % 100) == 0) {
                 //mexPrintf("\nAt burnin step # %d ", (i+burnIn));   
                 //mexPrintf(" out of %d .", burnIn);               
-            }
-        }
+         //   }
+        //}
     } // end for i = -burnIn:nSamples 
     
  plhs[0] = outVar;

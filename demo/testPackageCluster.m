@@ -1,14 +1,15 @@
 function testPackageCluster(fname,d,nSamplesTrain,nSamplesEval,burnIn, ...
                                nSamplesIterScaling, burnInIterScaling, ...
                                maxIter, maxInnerIter, beta, ...
-                               lambda0, lambdaTrue, mfxTrain)
+                               lambda0, lambdaTrue, mfxTrain, ...
+                               a, tau)
 % Simulation setup
 %--------------------------------------------------------------------------
 folder = '/home/marcel/criticalityIterScaling/results/';
 if nargin < 1 || isempty(fname)
- fname = [folder, 'tmp.mat'];
+ fnames = [folder, 'tmp.mat'];
 else
- fname = [folder, fname];
+ fnames = [folder, fname];
 end
 if nargin < 2 || isempty(d)
 d=15; %simulate 15 dimensional problem
@@ -47,18 +48,29 @@ else
  clear maxInnerIter
 end
 if nargin < 10 || isempty(beta)
- beta = 0.001*ones(d*(d+1)/2 + d+1,1);
+ beta = 0.00001*ones(d*(d+1)/2 + d+1,1);
 end
-if nargin < 11
+if nargin < 11 || isempty(lambda0)
  useLambdaInd = true; 
 else 
+ useLambdaInd = false;
  fitoptions.lambda0 = lambda0;
  clear lambda0;
+end
+if nargin < 14 || isempty(a)
+ a = fitoptions.nSamples;
+end
+if nargin < 15 || isempty(tau)
+ tau  = Inf;
+end
+
+if nargin > 12 && ~isempty(a) && ~isempty(tau)
+ fitoptions.nSamples = [0;round( a * 2.^((1:fitoptions.maxIter)' / tau ))];
+ fitoptions.nSamples = floor(fitoptions.nSamples/100)*100;
 end
 
 % The following shall be fixed to always these value
 % general sampling/data generation/evaluation related (IT overhead...)
-thinning      = ones(size(nSamplesTrain)); % essentially means no thinning
 modelTrue = 'ising_count_l_0'; % full model
 modelFit  = 'ising_count_l_0'; % full model
 trainMethod = 'iterativeScaling';
@@ -69,14 +81,21 @@ fitoptions.nRestart = 1;
 fitoptions.modelFit = modelFit;
 
 if nargin < 12 || isempty(lambdaTrue)
- h=randn(d,1)-1; %generate random bias terms;
- J=randn(d); J=triu(J,1)/sqrt(d); 
+ h=0.25*randn(d,1)-3.5; %generate random bias terms;
+ J= (3)*0.15*(randn(d)); J=triu(J,1); 
  lambda=hJ2lambda(h,J);
  switch modelTrue
      case 'ising_count_l_0'
-         L=randn(d+1,1)/sqrt(d);
+         %L=randn(d+1,1);
+          L=zeros(d+1,1);
+          L(1:28) = [3.7858,1.3932,-0.1493,-1.0014,-1.2690,-1.2713, ...
+                    -1.2733,-1.0631,-0.7464,-0.5362,-0.2728,-0.0624, ...
+                     0.2010,0.4114,0.5686,0.9383,1.0423,1.1465,1.0380,...
+                     1.0359,0.9275,0.7128,0.4983,-0.1944,-0.0903, ...
+                    -0.0925,-1.4757,-0.5218];
+          L(29:end) = -5; 
      case 'ising_count'
-         L=randn(d,1)/sqrt(d);
+         L=randn(d,1);
      case 'ising'
          L = [];
  end
@@ -86,27 +105,42 @@ end
 
 if nargin < 13 || isempty(mfxTrain)
  newData = true;
+else
+ newData = false;
 end
 
-compTimes = zeros(size(nSamplesTrain));
+pars.d = d; 
+pars.beta = beta; 
+pars.nSamplesTrain = nSamplesTrain;
+pars.nSamplesEval  = nSamplesEval;
+pars.burnIn = burnIn;
+
+
+
+compTimes = zeros(length(nSamplesTrain),2,6);
 
 for r = 1:length(nSamplesTrain)
-tic
+
+compTimes(r,1,:) = clock;
+
+
 % generate training data
 %--------------------------------------------------------------------------
-if newData
-  disp('Generating training data')
   % Initialize training data-generating MCMC chain with a sample drawn from
   % a nested model (only h = lamdbdaTrue(1:d), i.e. no J, no L)
   EX = exp(lambdaTrue(1:d))./(1+exp(lambdaTrue(1:d))); % works ok for small
   x0 = double(rand(d,1)<EX);                           % entries of L,J
 
+if newData % else we already have mfxTrain
+  disp('Generating training data')
  [mfxTrain,~,~] = maxEnt_gibbs_pair_C(nSamplesTrain(r), burnIn(r), lambdaTrue, x0, fitoptions.machine);
  %xTrain = maxEnt_gibbs_pair(nSamplesTrain(r), burnIn(r), thinning(r), ...
  %                       lambdaTrue, x0, modelTrue, 'default', 'samples');
+end
+
  EX = mfxTrain(1:d);
- idxL = length(lambda)+1:length(lambdaTrue);
- lambdaInd = zeros(size(lambdaTrue)); mfxInd = zeros(size(lambdaTrue));
+ 
+ lambdaInd = zeros(size(lambdaTrue)); 
  lambdaInd(1:d) = log(EX./(1-EX));
  lambdaInd(lambdaInd==Inf) =   1000; % fairly hacky solution in case
  lambdaInd(lambdaInd==-Inf) = -1000; % EX(k) = 0 resp. EX(k) = 1
@@ -114,14 +148,12 @@ if newData
  if useLambdaInd 
    fitoptions.lambda0 = lambdaInd;
  end
- 
- mfxInd(1:d) = EX;
- tmp = histc(sum(bsxfun(@lt, EX, rand([d,nSamplesTrain(r)])),1),0:d+1)/nSamplesTrain(r);
- if ~isempty(idxL)
-  mfxInd(idxL) =tmp(1:d+1);
- end
  clear EX tmp xTrain fxTrain 
-end
+
+
+save(fnames, 'lambdaTrue', 'beta', ...
+            'mfxTrain', ...
+            'fitoptions', 'pars');
 
 % train model
 %--------------------------------------------------------------------------
@@ -145,7 +177,7 @@ switch trainMethod
     %fitoptions.lambda0 = lambdaTrue;
     %fitoptions.lambda0(end-d:end) = 0;
     
-    [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions, beta);
+    [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions, beta, fname);
 end
 % validate model
 %--------------------------------------------------------------------------
@@ -175,21 +207,17 @@ end
 % mfxTrue = [EX(:);EXX(:);EK(:)];
 % clear x1 EX EXX EK description features Ptrue 
 % end % if d < 20  
-compTimes(r) = toc;
+                    
+compTimes(r,2,:) = clock;
+
 end % end for r = 1:length(nSamplesTrain)
 
 if ~exist('mfxTrue', 'var')
     mfxTrue = [];
 end
 
-pars.d = d; 
-pars.beta = beta; 
-pars.nSamplesTrain = nSamplesTrain;
-pars.nSamplesEval  = nSamplesEval;
-pars.burnIn = burnIn;
-
-save(fname, 'lambdaTrue', 'lambdaHat',          'lambdaInd', ...
-            'mfxTrain',   'mfxEval', 'mfxTrue', 'mfxInd', ...
-            'fitoptions', 'fitDiagnostics', 'pars', 'compTimes');
+save(fnames, 'lambdaTrue', 'lambdaHat',          'lambdaInd', ...
+             'mfxTrain',   'mfxEval', 'mfxTrue', 'beta', ...
+             'fitoptions', 'fitDiagnostics', 'pars', 'compTimes');
 
 end

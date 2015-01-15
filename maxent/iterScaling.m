@@ -1,4 +1,4 @@
-function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta)
+function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, fname)
 % code for fitting a maxEnt model with (improved?) iterative scaling.
 % Minimizes the negative log-likelihood of the data in xTrain under the 
 % maximum entropy model by (blockwise) coordinate descent. 
@@ -16,6 +16,7 @@ function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta)
 %      .nSamples:  number of Gibbs samples for each new MCMC sample
 %      .burnIn  :  number of Gibbs samples to be discarded from MCMC sample
 %      .machine :  string specifying which Gibbs implementation is used
+%   fname: (optional) string of file name for intermediate result storage
 % output:
 %   lamdaHat:   #features-by-1 vector of lambda as estimated from data
 %   fD:         structure containing several fitting diagnostics 
@@ -40,6 +41,9 @@ else                  % if feeding expectation of features E[f(X)] directly
 end
 clear fxTrain % may take a whole lot of memory 
 
+if nargin < 4
+  fname = date;
+end
 if nargin < 3
   beta = zeros(size(Efx));
 end
@@ -49,6 +53,12 @@ if any(beta >= Efx | beta >= 1-Efx)
   disp('Warning: Some of the regularizers \beta_j were chosen larger than E[f_j(X)]!')
 end
 
+if all(size(fitoptions.nSamples)<2)
+  fitoptions.nSamples = fitoptions.nSamples*[0;ones(fitoptions.maxIter,1)];
+end
+if all(size(fitoptions.burnIn)<2)
+  fitoptions.burnIn = fitoptions.burnIn * [0;ones(fitoptions.maxIter,1)];
+end
 %Efxh = Efx(1:n);               % appears wise to split the feature
 %EfxJ = Efx((n+1):(n*(n+1)/2)); % dimensions of f(X) up according to the
 %EfxV = Efx((end-n):end);       % upcoming block of coordindate descent
@@ -59,15 +69,21 @@ end % copy initialization for every run if not already provided
 
 idxBad = (Efx == 0); % identify pathological cases where lambda_i -> -Inf
 
-x0 = n; % setting the very first chain element to a number will urge the
-        % Gibbs sampler to randomly draw the chain initialization by itself
-        
+
+
+                
 %% 2. Start the update iteration
 %------------------------------------------
 lambdaHat = zeros(length(Efx),fitoptions.maxIter+1);
+Efys      = zeros(size(lambdaHat)); % keeps track of expectation goodness
+x0   = zeros(n, fitoptions.maxIter+1); % keeps track of MCMC chain starts
 idxj = zeros(fitoptions.maxIter,1); % keeps track of updated dimensions
 deltas = zeros(size(lambdaHat));    % keeps track of optimal step sizes
 deltaLLs = zeros(fitoptions.maxIter,1); % keeps track of LL improvements
+
+
+
+
 for r = 1:fitoptions.nRestart
     
   % generate / load parameter initialization
@@ -77,9 +93,17 @@ for r = 1:fitoptions.nRestart
     lambdaHat(:,1) = fitoptions.lambda0;                                                 
   end
   
-  lambdaHat(idxBad,1) = 0;    % Set those parameters for features f_i with
-  lambdaHat(n*(n+1)/2+1) = 0; % E[f_i]=0 and the feature for K=0 to zero 
+  lambdaHat(idxBad,1) = 0;     % Set those parameters for features f_i with
+  lambdaHat(n*(n+1)/2+1,1) = 0;% E[f_i]=0 and the feature for K=0 to zero 
 
+  % Generate first MCMC chain element x0 using E[X] from a maxEnt model 
+  EX = exp(lambdaHat(1:n,1))./(1+exp(lambdaHat(1:n,1))); % with only h,
+  x0(:,1) = double(rand(n,1)<EX);              % i.e. no parameters J, L
+  
+  fD.idxBad = idxBad; % indexes of parameters not to be touched
+  fD.lambdaInit = lambdaHat(:,1);
+  fD.Efx = Efx; % what we try to achieve
+  
 % MAIN LOOP
 
   for iter = 2:fitoptions.maxIter+1
@@ -87,11 +111,13 @@ for r = 1:fitoptions.nRestart
     disp([num2str(iter-1), '/' num2str(fitoptions.maxIter)])
    
     lambdaHat(:,iter)  = lambdaHat(:,iter-1);
-    [Efy,~,x0] = maxEnt_gibbs_pair_C(fitoptions.nSamples, ...
-             fitoptions.burnIn, lambdaHat(:,iter), x0, fitoptions.machine);
+    [Efy,~,x0(:,iter)] = maxEnt_gibbs_pair_C(fitoptions.nSamples(iter), ...
+                                             fitoptions.burnIn(iter), ...
+                          lambdaHat(:,iter), x0(:,iter-1), fitoptions.machine);
     % returning x0 (now a full n-by-1 vector) for use as initial element of
     % the next Gibbs chain, assuming that the distributions do not change 
     % much from one iteration to the next. 
+    Efys(:,iter) = Efy;
     %Efyh = Efy(1:n);               % appears wise to split the feature
     %EfyJ = Efy((n+1):(n*(n+1)/2)); % dimensions of f(Y) up according to the
     %EfyV = Efy((end-n):end);       % upcoming block of coordindate descent
@@ -154,17 +180,30 @@ for r = 1:fitoptions.nRestart
     % Update correct component of parameter vector lambda
     lambdaHat(idxj(iter),iter) = lambdaHat(idxj(iter),iter) + delta(idxj(iter)); 
 
-    if ismember(idxj(iter), find(ic))
-        disp(['l1 set weight ', num2str(idxj(iter)), 'to 0!'])
-        disp(num2str(lambdaHat(idxj(iter),iter)))
-        disp(num2str(delta(idxj(iter))))
-        disp('--- deltaLL:')
-        disp(num2str(deltaLL))
-        disp('--- delta: ')
-        disp(num2str(delta))
-        disp('--- Efy: ')
-        disp(num2str(Efy))
-    end
+    % Save
+     fD.deltaLL = deltaLL;    % currently possible gains in log-likelihood
+     fD.deltaLLs = deltaLLs;  % trace of realized gains in log-likelihood
+     fD.lambdaTrace = lambdaHat(:,2:end); % trace of parameter estimates
+     fD.idxUpdate = idxj(2:end); % trace of parameters picked for updating
+     fD.deltas = deltas;      % trace of sizes of changes in parameters
+     fD.EfyTrace = Efys(:,2:end);  % trace of resulting expected values
+     fD.Efy = Efy; % what we did achieve in quality up to this iteration
+     fD.x0 = x0;   % trace of initial chain elements for each MCMC draw
+    fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
+    fnames=['/home/marcel/criticalityIterScaling/results/',fnames,'.mat'];
+    save(fnames, 'fD', 'fitoptions') 
+     
+%     if ismember(idxj(iter), find(ic))
+%         disp(['l1 set weight ', num2str(idxj(iter)), 'to 0!'])
+%         disp(num2str(lambdaHat(idxj(iter),iter)))
+%         disp(num2str(delta(idxj(iter))))
+%         disp('--- deltaLL:')
+%         disp(num2str(deltaLL))
+%         disp('--- delta: ')
+%         disp(num2str(delta))
+%         disp('--- Efy: ')
+%         disp(num2str(Efy))
+%     end
 
     %end
     
@@ -180,16 +219,6 @@ for r = 1:fitoptions.nRestart
 %   lambdaHat(:,end) = lambdaHat(:,fitoptions.maxIter) + delta; 
 end
 
-fD.deltaLL = deltaLL;
-fD.deltaLLs = deltaLLs;
-fD.lambdaTrace = lambdaHat(:,2:end); 
-fD.idxUpdate = idxj(2:end);
-fD.deltas = deltas;
-fD.idxBad = idxBad;
-fD.Efx = Efx; % what we tried to achieve
-fD.Efy = Efy; % what we did achieve
-
-fD.lambdaInit = lambdaHat(:,1);
 lambdaHat = lambdaHat(:,fitoptions.maxIter+1);
 
 % figure; 
