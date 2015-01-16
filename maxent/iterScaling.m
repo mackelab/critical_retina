@@ -189,9 +189,14 @@ for r = 1:fitoptions.nRestart
      fD.EfyTrace = Efys(:,2:end);  % trace of resulting expected values
      fD.Efy = Efy; % what we did achieve in quality up to this iteration
      fD.x0 = x0;   % trace of initial chain elements for each MCMC draw
+     
+     idxIter = idxj(iter);
+     x0Iter  = x0(:,iter);
+     lambdaIter = lambdaHat(:,iter);
+     deltaIter = deltas(:,iter);
     fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
     fnames=['/home/marcel/criticalityIterScaling/results/',fnames,'.mat'];
-    save(fnames, 'fD', 'fitoptions') 
+    save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', 'lambdaIter') 
      
 %     if ismember(idxj(iter), find(ic))
 %         disp(['l1 set weight ', num2str(idxj(iter)), 'to 0!'])
