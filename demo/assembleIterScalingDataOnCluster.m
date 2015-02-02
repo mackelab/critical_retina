@@ -1,5 +1,9 @@
-function assembleIterScalingDataOnCluster(runIDs)
+function assembleIterScalingDataOnCluster(runIDs, runNames)
 
+if nargin < 2
+    runNames = {'sess1_800', 'sess2_1600', 'sess3_3200', 'sess4_6400', 'sess5_12800', ...
+                'sess6_400_2000', 'sess7_800_2000', 'sess8_800_1000'};
+end
 %input: 
 % - runIDs: subset of run IDs (first run was sessions numbered 1 to 8,
 %           second run was session number 91 to 98) to assemble data from.
@@ -47,7 +51,7 @@ end
 for i = runIDs % e.g. 1:8   % for each stored run ...
     
  disp(['obtaining numbers for session sess', num2str(i)])
-  tStart = ['sess', num2str(i)];  % assumed first part of run idx
+  tStart = [runNames{i}(1:4), num2str(i)];  % assumed first part of run idx
   diri = dir( strcmp(tStart, dirStarts), : ); % all save file names
   runIdx = diri(end,1:find(diri(end,:)=='.')-1); % full run idx (with nSamples)
   diri = diri(1:end-1,:); % first file contained pars, fitoptions etc.
