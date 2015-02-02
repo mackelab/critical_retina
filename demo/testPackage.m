@@ -12,8 +12,8 @@ thinning      = [1,1,1,1];
 modelTrue = 'ising_count_l_0';
 modelFit  = 'ising_count_l_0';
 trainMethod = 'iterativeScaling';
-newLambda = true;
-newData   = true;
+newLambda = false;
+newData   = false;
 
 s = RandStream('mcg16807','Seed',0)
 RandStream.setDefaultStream(s)
@@ -105,7 +105,7 @@ switch trainMethod
     fitoptions.nRestart = 1;
     fitoptions.modelFit = modelFit;
      
-    beta = 0.001*ones(size(lambdaTrue));
+    beta = 0.01*ones(size(lambdaTrue));
     [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions, beta);
 end
 % validate model

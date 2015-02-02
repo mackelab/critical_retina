@@ -12,6 +12,7 @@ if newLambda
  lambdaTrue = [lambda;L];
  lambdaHat  = lambdaTrue + randn(size(lambdaTrue)); 
 end
+
 if newData
  disp('Generating training data')
  [Efx,~,~] = maxEnt_gibbs_pair_C(nSamplesTrain, burnIn, lambdaTrue, n);

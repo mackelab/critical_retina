@@ -2,7 +2,8 @@ function testPackageCluster(fname,d,nSamplesTrain,nSamplesEval,burnIn, ...
                                nSamplesIterScaling, burnInIterScaling, ...
                                maxIter, maxInnerIter, beta, ...
                                lambda0, lambdaTrue, mfxTrain, ...
-                               a, tau)
+                               a, tau, ...
+                               ifSave, ifVK, ifbwVK)
 % Simulation setup
 %--------------------------------------------------------------------------
 folder = '/home/marcel/criticalityIterScaling/results/';
@@ -63,8 +64,16 @@ end
 if nargin < 15 || isempty(tau)
  tau  = Inf;
 end
-
-if nargin > 12 && ~isempty(a) && ~isempty(tau)
+if nargin < 16 || isempty(ifSave)
+    ifSave = true;
+end
+if nargin < 17 || isempty(ifVK)
+    ifVK = true;
+end
+if nargin < 18 || isempty(ifbwVK)
+    ifbwVK = true;
+end
+if nargin > 13 && ~isempty(a) && ~isempty(tau)
  fitoptions.nSamples = [0;round( a * 2.^((1:fitoptions.maxIter)' / tau ))];
  fitoptions.nSamples = floor(fitoptions.nSamples/100)*100;
 end
@@ -177,7 +186,7 @@ switch trainMethod
     %fitoptions.lambda0 = lambdaTrue;
     %fitoptions.lambda0(end-d:end) = 0;
     
-    [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions, beta, fname);
+    [lambdaHat, fitDiagnostics] = iterScaling(mfxTrain, fitoptions, beta, fname, ifSave, ifVK, ifbwVK);
 end
 % validate model
 %--------------------------------------------------------------------------

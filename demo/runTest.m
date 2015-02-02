@@ -1,8 +1,18 @@
-function runTest(fname, nSample, a, tau, maxIter)
+function runTest(fname, nSample, a, tau, maxIter, ifVK, ifbwVK)
 
-load('/home/marcel/criticalityIterScaling/data/testDataBestHard.mat')
+if nargin < 6
+    ifVK = true;
+end
+
+if nargin < 7
+    ifbwVK = true;
+end
+
+ifSave = true;
+
+load('/home/marcel/criticalityIterScaling/data/testDataBest.mat')
 testPackageCluster(fname,100,32000,32000,1000, nSample, 200, maxIter, 1, ...
                                [], [], lambdaTrue ,mfxTrain, ...
-                               a, tau)
+                               a, tau, ifSave, ifVK, ifbwVK)
                            
 end
