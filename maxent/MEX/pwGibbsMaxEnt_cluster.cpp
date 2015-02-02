@@ -52,13 +52,23 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
     int idl=0;					// current population activity count K
     
     int k,l;					// indices for current pair of variables 
+    int kl;                     // index for state of current variable pair 
     int dmok, dmol, fmidx;      // convenience indexes for entries of J
     double sk, sl, slk;			// summary variable for effects from J
     double L0, L1, L2;		    // variables for effects from L
 
+    double E;  // short-term storage for energy 
+    double Ec, E2c; // intermediate storage for (squared) energy (variance)
+    double ETmp  = 0;  // intermediate storages 
+    double E2Tmp = 0;  // (will be updated after each sweep) 
+    double ESampled;        // long-term storages (will be
+    double E2Sampled;       // updated each 100 sweeps or so)
+    double pE[4]; // partial energies for all configurations of x(k),x(l)
+    
     double p[4]; // probabilities for bivariate distribution over x(k),x(l)
-    double sump, maxp; // normalizer and 
-  
+    double sump, maxpE; // normalizer and maximum entry of partial energies
+    
+    
     double rnd;	// random variable to decide new entries for x(k), x(l)
 
     int idx; // all-purpose index for iterating through vector entries
@@ -72,7 +82,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
         ks[idx] = idx; // default order of pairs: counted from 1 to numPair
     }
     for (idx=0; idx<d; idx++) {
-    	if (x0[idx]==1) {
+    	if (*(x0+idx)==1) {
             xc[idx] = true; // current chain segment x
     		idl+=1;	        // population activity count
         }
@@ -80,6 +90,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
             xc[idx] = false;
     	}
     }
+    
     
     for (idx=0; idx<numAll; idx++) {
         xTmp[idx] = 0;  // intermediate storage for Rao-Blackwell variables
@@ -96,6 +107,10 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
     for (idx=0; idx<numAll; idx++) {
         xTmp[idx] = 0;  // intermediate storage for Rao-Blackwell variables
     }       
+    
+    ESampled = 0;
+    E2Sampled = 0;
+    
 /* 3. Start MCMC chain */
  
 	/* FOR EACH OF THE IN TOTAL nSamples + burnIn MANY SWEEPS... */
@@ -106,17 +121,23 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
         for (idx=0; idx < numAll; idx++) {
         	pc[idx] = 0;	// reset current results for expected values
         }
-
+        Ec = 0;     // reset current results for terms needed to 
+        E2c = 0;    // estimate the variance of energy
+        
         /* ... VISIT EACH POSSIBLE PAIR OF VARIABLES AND UPDATE THEM */
         for (j = 0; j < numPair; j++) {
      
             k = *(pairs+ks[j]);			// choose current pair of 
          	l = *(pairs+ks[j]+numPair);	// variables to work on
+            
+            kl = 0; 
             if (xc[k]) { //
                 idl--;   // momentarily assume both variables
-            }            // to equal 0. 
+                kl = 2;  // to equal 0
+            }            //
             if (xc[l]) { // We'll add the true values at the 
                 idl--;   // end of the loop iteration.
+                kl++;    //
             }            //
             
             /* compute probabilities for bivariate distribution over x(k),
@@ -155,19 +176,21 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
     		L2 = *(L+idl+2); // x(k) and x(l) being equal to 1
 
     		/* finish computing bivariate Bernoulli probabilities */
-    		p[0]= (h[k]        + sk        + L1); // x(k) = 1, x(l) = 0
-    		p[1]= (h[k] + h[l] + slk + sl  + L2); // x(k) = 1, x(l) = 1
-    		p[2]= (       h[l]       + sl  + L1); // x(k) = 0, x(l) = 1
-    		p[3]= (                          L0); // x(k) = 0, x(l) = 0
+    		pE[0]= (                          L0); // x(k) = 0, x(l) = 0
+    		pE[1]= (       h[l]       + sl  + L1); // x(k) = 0, x(l) = 1
+    		pE[2]= (h[k]        + sk        + L1); // x(k) = 1, x(l) = 0
+    		pE[3]= (h[k] + h[l] + slk + sl  + L2); // x(k) = 1, x(l) = 1
+
+            E -= pE[kl]; // subtract partial energy of the old state
             
-            maxp = 0; // maximum of p[0],...,p[3]
+            maxpE = 0; // maximum of pE[0],...,pE[3]
             for (idx=0; idx<4; idx++) {
-             if (p[idx]>maxp) {
-                 maxp = p[idx];
+             if (pE[idx]>maxpE) {
+                 maxpE = pE[idx];
              }
             }
             for (idx=0; idx<4; idx++) { // subtract maxp to hopefully 
-             p[idx] = exp(p[idx]-maxp); // avoid numerical overflows
+             p[idx] = exp(pE[idx]-maxpE); // avoid numerical overflows
             }
     		sump = p[0]+p[1]+p[2]+p[3];
             p[0] /= sump;									//
@@ -177,24 +200,33 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
             
             /* draw new pair of variables from bivariate Bernoulli */
             rnd = (rand()+1.0)/(RAND_MAX+1.0); // c99-style uniform distr.
-            if (rnd>(p[0]+p[1])) { //
-                xc[k] = false;     // we last visited the configuration 
+            if (rnd>(p[2]+p[3])) { //
+                xc[k] = false;     // 
+                kl = 0;            // we last visited the configuration 
             }                      // x(k)=x(l)=1, now just need to flip
             else {                 // x(k),x(l) to zero if necessary. 
                 idl++;             //
+                kl = 2; 
             }
-            if ((p[0] > rnd) || (rnd > (1 - p[3]))) {
+            if ((p[2] > rnd) || (rnd > (1 - p[0]))) {
                 xc[l] = false;
             }
             else {
                 idl++;
+                kl += 1;
             }
 
+            /* update and collect energy for outputting the variance */            
+            E += pE[kl]; // update energy with changes from the new state
+            Ec  += E;
+            E2c += E*E;           
+            
             /* collect probabilities for Rao-Blackwell */
-            pc[k] += (p[0]+p[1]);
-            pc[l] += (p[1]+p[2]);
-            pc[d+ks[j]] = p[1];
+            pc[k] += (p[2]+p[3]);
+            pc[l] += (p[1]+p[3]);
+            pc[d+ks[j]] = p[3];
         	pc[numIsing+idl]++;
+            
                             
         } // end for j = 0:numPair
 
@@ -204,20 +236,41 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
             pc[numIsing+idx] /= numPair;
         }
         pc[numAll-1] /= numPair; // final entry for L (d+1 entries!)
+        Ec  /= numPair; // summed energy also needs to be normalized
+        E2c /= numPair; 
         
         /* shove results to mid-term storage and final outputs */
 	if (i > 0) {          //* after burn-in phase is over:
         	for (idx =0; idx<numAll; idx++) {// copy into mid-term storage
         		xTmp[idx] += pc[idx]; // adds up results from 100 sweeps 
-                }                         // before passing on to xSampled
+            }                        // before passing on to xSampled
+            ETmp += Ec;           
+            E2Tmp += E2c;
             
         	if ((i % 100) == 0) {    // every hundred sweeps ...
             	for (idx = 0; idx<numAll; idx++) { // move to final results 
             		xSampled[idx] = ((i-100)*xSampled[idx] + xTmp[idx])/i;	
             		xTmp[idx] = 0; // (normalize regularly to avoid 
             	}                  //  numerical overflows)
+                ESampled = ((i-100)*ESampled + ETmp)/i;
+                ETmp = 0; 
+                E2Sampled = ((i-100)*E2Sampled + E2Tmp)/i;
+                E2Tmp = 0;                
                 //mexPrintf("\nCurrent sample is # %d ", i);   
                 //mexPrintf(" out of %d .", nSamples);   
+                
+                /* re-initialize energy from current chain element */
+                E = *(L+idl);    // first add entry for population activity count
+                for (k=0; k<d; k++) { // now add entries for h, J
+                    if (*(xc+k)) {
+                        E += h[k];      // entries for h
+                    }
+                    for (l=0; l<d-k-1; l++) { // borrowing index i for the moment...
+                        if (*(xc+l+1+k) & *(xc+k)) {
+                            E += J[ k*d - (k*(k+1))/2 + l];      // entries for J
+                        }
+                    }
+                }
         	}
         }
         //else { // give status reports also during burn-in phase
@@ -239,6 +292,13 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
         }
     }
     plhs[1] = outX;    
+ }
+ if (nlhs > 2) {
+    mxArray *outE = mxCreateDoubleMatrix(2, 1, mxREAL);
+    double * EOut = mxGetPr(outE);
+    EOut[0] = ESampled;
+    EOut[1] = E2Sampled;
+    plhs[2] = outE;    
  }
  delete [] pairs;
  delete [] fm;

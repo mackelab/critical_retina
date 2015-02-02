@@ -49,16 +49,17 @@ xc = logical(x0); % current sample, will be continuously updated throughout
 %[xSampled,E] = pwGibbsWrapper(nSamples,burnIn,d,xc,pairs,m,fm,h,J,L); % MEX
 switch machine
     case 'cluster'
-[xSampled,xc] = pwGibbsMaxEnt_cluster(int32(nSamples),int32(burnIn),int32(d),...
-                                   xc, pairs-1, m, fm-1, h, J, L);
+[xSampled,xc,E] = pwGibbsMaxEnt_cluster(int32(nSamples),int32(burnIn),int32(d),...
+                                   double(xc), pairs-1, m, fm-1, h, J, L);
     case 'laptop'
 [xSampled,xc] = pwGibbsMaxEnt_malloc(int32(nSamples),int32(burnIn),int32(d),...
                                    xc, pairs-1, m, fm-1, h, J, L);
+ E = [];       
     otherwise
 [xSampled,xc] = pwGibbsMaxEnt_malloc(int32(nSamples),int32(burnIn),int32(d),...
                                    xc, pairs-1, m, fm-1, h, J, L);
-end
-E = [];                              
+ E = [];       
+end                       
 end
 
 
