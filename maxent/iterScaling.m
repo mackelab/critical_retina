@@ -1,4 +1,4 @@
-function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, fname, ifSave, hJV, ifbwVK)
+function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, eps, fname, ifSave, hJV, ifbwVK)
 % code for fitting a maxEnt model with (improved?) iterative scaling.
 % Minimizes the negative log-likelihood of the data in xTrain under the 
 % maximum entropy model by (blockwise) coordinate descent. 
@@ -16,6 +16,8 @@ function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, fname, ifSave, 
 %      .nSamples:  number of Gibbs samples for each new MCMC sample
 %      .burnIn  :  number of Gibbs samples to be discarded from MCMC sample
 %      .machine :  string specifying which Gibbs implementation is used
+%      .sig2_l2: regularization strength for the ridge-part of the bwVK
+%      .sig2_sm: regularization strength for the smoothing-part of the bwVK
 %   fname: (optional) string of file name for intermediate result storage
 %   ifSave: boolean specifying whether or not to save intermediate results
 %   hJV: 3-by-1 vector of booleans giving whether to include h, J and/or V 
@@ -30,7 +32,9 @@ function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, fname, ifSave, 
 %      .deltas:      all candidate optimal update step sizes
 %      .Efx:         sought-after data means E_emp[f(X)]
 %      .Efy:         actually returned model means E_lambda[f(X)] 
-    
+
+ticTime = now;
+
 % 1. Input formatting and pre-computations
 %------------------------------------------
 [n, ~] = size(xTrain);    
@@ -43,56 +47,65 @@ else                  % if feeding expectation of features E[f(X)] directly
 end
 clear fxTrain % may take a whole lot of memory 
 
-if nargin < 6
+if nargin < 7 || isempty(hJV)
   hJV = ones(3,1); % default: include terms for h, J and V(K) (full model)
 end
-if nargin < 5
+if nargin < 6 || isempty(ifSave)
   ifSave = true; % default: save intermediate results after each iteration
 end
-if nargin < 4
-  fname = date;
+if nargin < 5 % note that setting fname = [] is possible for test purposes
+  fname = date;  % default: save with current date
+  ifSave = false;
 end
-if nargin < 3
-  beta = zeros(size(Efx));
+if nargin < 4 || isempty(eps)
+  eps = 10^(-2) * ones(3,1); % default error tolerance: 1%
+end
+if nargin < 3 || isempty(beta)
+  beta = zeros(size(Efx)); % default: no regularization
 end
 
-if any(beta >= Efx | beta >= 1-Efx)
-  %beta(beta>Efx) = 0.9* min([1-Efx(beta>Efx),Efx(beta>Efx)],[],2); 
-  disp('Warning: Some of the regularizers \beta_j were chosen larger than E[f_j(X)]!')
-end
-
-if all(size(fitoptions.nSamples)<2)
+if all(size(fitoptions.nSamples)<2) % if nSamples is constant for all iters
   fitoptions.nSamples = fitoptions.nSamples*[0;ones(fitoptions.maxIter,1)];
 end
-if all(size(fitoptions.burnIn)<2)
+if all(size(fitoptions.burnIn)<2)   % if burnIn is constant for all iters
   fitoptions.burnIn = fitoptions.burnIn * [0;ones(fitoptions.maxIter,1)];
 end
 
-%Efxh = Efx(1:n);               % appears wise to split the feature
-%EfxJ = Efx((n+1):(n*(n+1)/2)); % dimensions of f(X) up according to the
-%EfxV = Efx((end-n):end);       % upcoming block of coordindate descent
-
-
-
-if ~isempty(fitoptions.lambda0) && size(fitoptions.lambda0,2) ~= fitoptions.nRestart
-  fitoptions.lambda0=repmat(fitoptions.lambda0(:,1),1,fitoptions.nRestart);
-end % copy initialization for every run if not already provided
+% fitoptions for the call to minFunc during iterScalingAllVKs()
+fitoptionsbwVK.maxK = find(Efx(end-n:end)==0, 1, 'first')-2;
+fitoptionsbwVK.sig2_l2 = 400;   
+fitoptionsbwVK.sig2_sm = []; % will set this for each individual call   
+fitoptionsbwVK.tau = 2;   
+fitoptionsbwVK.optTol=1e-100; 
+fitoptionsbwVK.progTol=1e-100; 
+fitoptionsbwVK.display='off';
+fitoptionsbwVK.MaxIter=3000;
+fitoptionsbwVK.maxFunEvals=10000;
 
 idxBad = (Efx == 0); % identify pathological cases where lambda_i -> -Inf
+
 if ~hJV(1) % declare parameters of h to be 'bad', i.e. do not fit them
  idxBad = idxBad | ((1:length(Efx)) <= n)';  
  fitoptions.lambda0(1:n,:) = 0;
+ eps(1) = Inf; % ignore errors for h-Terms when checking for convergence
 end
-if ~hJV(2) % declare parameters of h to be 'bad', i.e. do not fit them
+if ~hJV(2) % declare parameters of J to be 'bad', i.e. do not fit them
  idxBad = idxBad | (((1:length(Efx))>n)&((1:length(Efx))<length(Efx)-n))';  
  fitoptions.lambda0((n+1):(n*(n+1)/2),:) = 0; 
+ eps(2) = Inf; % ignore errors for J-Terms when checking for convergence
 end
-if ~hJV(3) % declare parameters of h to be 'bad', i.e. do not fit them
+if ~hJV(3) % declare parameters of V to be 'bad', i.e. do not fit them
  idxBad = idxBad | ((1:length(Efx)) >= length(Efx)-n)';  
  fitoptions.lambda0((n*(n+1)/2+1):end,:) = 0; 
+ eps(3) = Inf; % ignore errors for V-Terms when checking for convergence
 end
 
-                
+%fDescr  = [[1:n; (1:n)*nan],nchoosek(1:n,2)',[0:n; (0:n)*nan]]; 
+fDescrJ = nchoosek(1:n,2)'; 
+
+covs.x = Efx((n+1):(n*(n+1)/2)) - ...              % covariance as computed
+        (Efx(fDescrJ(1, :)).* Efx(fDescrJ(2, :))); % from Efx
+
 %% 2. Start the update iteration
 %------------------------------------------
 lambdaHat = zeros(length(Efx),fitoptions.maxIter+1);
@@ -103,36 +116,38 @@ deltas = zeros(size(lambdaHat));    % keeps track of optimal step sizes
 deltaLLs = zeros(fitoptions.maxIter,1); % keeps track of LL improvements
 
 
-
-
 for r = 1:fitoptions.nRestart
     
   % generate / load parameter initialization
   if isempty(fitoptions.lambda0) || size(fitoptions.lambda0,1) ~= size(lambdaHat,1)
+    disp('No inizialitaion for \lambda given. Generating new initialization')
     lambdaHat(:,1) = [randn(n,1);randn(n*(n-1)/2,1)/sqrt(n);randn(n+1,1)];            
   else
+    disp('Using user-provided initialization for \lambda')
     lambdaHat(:,1) = fitoptions.lambda0;                                                 
   end
   
   lambdaHat(idxBad,1) = 0;     % Set those parameters for features f_i with
   lambdaHat(n*(n+1)/2+1,1) = 0;% E[f_i]=0 and the feature for K=0 to zero 
 
+  lambdaHat(end-n+fitoptionsbwVK.maxK+1:end,1) = -1000; 
+  
   % Generate first MCMC chain element x0 using E[X] from a maxEnt model 
   EX = exp(lambdaHat(1:n,1))./(1+exp(lambdaHat(1:n,1))); % with only h,
   x0(:,1) = double(rand(n,1)<EX);              % i.e. no parameters J, L
   
   fD.idxBad = idxBad; % indexes of parameters not to be touched
-  fD.lambdaInit = lambdaHat(:,1);
   fD.Efx = Efx; % what we try to achieve
   
   minIter = 2; % standard starting index of MCMC chain (iter=1 is x0)
-  
+
+if ~isempty(fname)
   % Check for previous results from potentially cancelled run
-  cd '/home/marcel/criticalityIterScaling/results/'
-  names = strsplit(ls([fname,'*'])); % may take forever...
+  cd(['/home/marcel/criticalityIterScaling/results/',fname,'/'])
+  names = strsplit(ls); % may take forever...
   names = sort(names);
-  if ~isempty(names)
-   lfile = names{end-2}; % load second-last iteration (last file could be corrupted)
+  if ~isempty(names) && ~strcmp(names{end},'') % '' is always first after sorting
+   lfile = names{end-1}; % load second-last iteration (last file could be corrupted)
    minIter = str2num(lfile(end-8:end-4)); 
    if minIter < fitoptions.maxIter
     load(lfile); % 
@@ -144,7 +159,8 @@ for r = 1:fitoptions.nRestart
     disp(['restarting from earlier run ', fname, ', iter #', num2str(minIter), '/', num2str(fitoptions.maxIter)])
    end
   end
-  
+end   
+
 % MAIN LOOP
 
   for iter = minIter:fitoptions.maxIter+1
@@ -171,8 +187,13 @@ for r = 1:fitoptions.nRestart
           delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
           
           if ifbwVK
+             fitoptionsbwVK.sig2_sm = ... % get strength of V(K)-smoothing 
+                   var(lambdaHat(end-n+1:end-n+fitoptionsbwVK.maxK,iter));               
              [deltaVK, deltaLLVK] = iterScalingAllVKs(Efx(end-n:end),...
-                                                      Efy(end-n:end));
+                                                      Efy(end-n:end),...
+                                           lambdaHat(end-n:end,iter),...
+                                                      zeros(n+1,1),  ...
+                                                      fitoptionsbwVK);
               delta(end-n:end) = deltaVK;
           end
         case 'l1'
@@ -191,7 +212,11 @@ for r = 1:fitoptions.nRestart
 
           if ifbwVK
              [deltaVK, deltaLLVK] = iterScalingAllVKs(Efx(end-n:end),...
-                                                      Efy(end-n:end));
+                                                      Efy(end-n:end),...
+                                           lambdaHat(end-n:end,iter),...
+                                                      zeros(n+1,1),  ...
+                                                      fitoptionsbwVK);
+
               delta(end-n:end) = deltaVK;
           end
           
@@ -219,14 +244,21 @@ for r = 1:fitoptions.nRestart
     
     % Compute gains in log-likelihood for these candidate updates
     deltaLL = - delta .* Efx + log( 1 + (exp(delta)-1) .* Efy ) ;     
-    if ifbwVK    
-      deltaLL(end-n:end) = deltaLLVK;
-    end
+    
     switch fitoptions.regular
         case 'none' % immediately done
-        case 'l1'
-          deltaLL = deltaLL + ... % add regularization terms
-           beta .* (abs(lambdaHat(:,iter)+delta) - abs(lambdaHat(:,iter))); 
+        case 'l1'   % add l1 regularization terms where applicable
+          deltaLL(1:(n*(n+1)/2)) = deltaLL(1:(n*(n+1)/2)) + ... 
+           beta(1:(n*(n+1)/2)) .* ...
+               (abs(lambdaHat(1:(n*(n+1)/2),iter)+delta(1:(n*(n+1)/2))) ...
+                 - abs(lambdaHat(1:(n*(n+1)/2),iter))); 
+          if ifbwVK  % l2-regularized block-wise update of V(K)
+            deltaLL(end-n:end) = deltaLLVK;             
+          else % if not l2-regularizing V(K), then treat as all others
+            deltaLL(end-n:end) = deltaLL(end-n:end) + ... % l1-regularize
+             beta(end-n:end) .* (abs(lambdaHat(end-n:end,iter)+delta) ...
+                                 - abs(lambdaHat(end-n:end,iter))); 
+          end            
         otherwise   % do nothing as for no regularization, but warn          
           disp('Unknown regularization chosen. Solution not regularized')
     end
@@ -239,41 +271,75 @@ for r = 1:fitoptions.nRestart
     
     
     % Update correct component of parameter vector lambda
-    lambdaHat(idxj(iter),iter) = lambdaHat(idxj(iter),iter) + delta(idxj(iter)); 
-    if ifbwVK && idxj(iter) > n*(n+1)/2
-      lambdaHat(end-n:end,iter) = lambdaHat(end-n:end,iter) + deltaVK;
+    if ifbwVK && idxj(iter) > n*(n+1)/2 % update V(K) as single block
+      lambdaHat(end-n:end,iter)  = lambdaHat(end-n:end,iter) + deltaVK;
+    else % either no blocked V(K)-update or updating a h- or J-term
+      lambdaHat(idxj(iter),iter) = lambdaHat(idxj(iter),iter) + ...
+                                                         delta(idxj(iter));         
     end
+       
+    % Compute errors on E[f(X)], split into blocks corresponding to (h,J,V)
+    MSE.h = mean( (Efx(1:n)-Efy(1:n)).^2 );
+    MSE.V = mean( (Efx(end-n:end)-Efy(end-n:end)).^2 ); 
+    MSE.J = mean( (Efx((n+1):(n*(n+1)/2))-Efy((n+1):(n*(n+1)/2))).^2 ); 
+    
+    covs.y = Efy((n+1):(n*(n+1)/2)) - ...              % cov(a,b) = E(a*b) -
+          (Efy(fDescrJ(1, :)).* Efy(fDescrJ(2, :))); %            E(a)*E(b)
+    MSE.cov = mean( (covs.x - covs.y).^2 );
+
+    MSEperc.h = sqrt(MSE.h)/sqrt(mean(Efx(1:n).^2));        % percentage of
+    MSEperc.V = sqrt(MSE.V)/sqrt(mean(Efx(end-n:end).^2));  % mean-squares
+    MSEperc.cov = sqrt(MSE.cov)/sqrt(mean(abs(covs.x).^2)); % of Efx
+    
     % Save
     if ifSave
-     fD.deltaLL = deltaLL;    % currently possible gains in log-likelihood
-     fD.deltaLLs = deltaLLs;  % trace of realized gains in log-likelihood
-     fD.lambdaTrace = lambdaHat(:,2:end); % trace of parameter estimates
-     fD.idxUpdate = idxj(2:end); % trace of parameters picked for updating
-     fD.deltas = deltas;      % trace of sizes of changes in parameters
-     fD.EfyTrace = Efys(:,2:end);  % trace of resulting expected values
-     fD.Efy = Efy; % what we did achieve in quality up to this iteration
-     fD.x0 = x0;   % trace of initial chain elements for each MCMC draw
      
      idxIter = idxj(iter);
      x0Iter  = x0(:,iter);
      lambdaIter = lambdaHat(:,iter);
-     deltaIter = deltas(:,iter);
-    fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
-    fnames=['/home/marcel/criticalityIterScaling/results/',fnames,'.mat'];
-    save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', 'lambdaIter') 
+     deltaIter = delta;
+     fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
+     fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
+             '/', fnames,'.mat'];
+     save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
+                             'lambdaIter', 'MSE', 'MSEperc', 'covs') 
     end
+    
+    % Check for convergence
+    % 1. Ran for more than 24 h hours
+    tocTime = now; 
+    if (tocTime - ticTime) > 1
+      break;
+    end
+    % 2. Did more updates than 10 times the number of parameters
+    if iter > (10 * n * (n+3) / 2)
+      break;
+    end
+    % 3. Error smaller than tolerance    
+    if ( (MSEperc.h < eps(1)) && ...   % check h, V first, 
+         (MSEperc.V < eps(3)) && ... % as is faster
+         (MSEperc.cov  < eps(2)) ) 
+          break;
+    end
+   
     
   end % END MAIN LOOP
 
      fD.deltaLL = deltaLL;    % currently possible gains in log-likelihood
-     fD.deltaLLs = deltaLLs;  % trace of realized gains in log-likelihood
-     fD.lambdaTrace = lambdaHat(:,2:end); % trace of parameter estimates
-     fD.idxUpdate = idxj(2:end); % trace of parameters picked for updating
-     fD.deltas = deltas;      % trace of sizes of changes in parameters
-     fD.EfyTrace = Efys(:,2:end);  % trace of resulting expected values
+     fD.deltaLLs = deltaLLs(1:iter-1);  % trace of realized gains in log-likelihood
+     fD.lambdaTrace = lambdaHat(:,2:iter); % trace of parameter estimates
+     fD.idxUpdate = idxj(2:iter); % trace of parameters picked for updating
+     fD.deltas = deltas(:,1:iter-1);  % trace of sizes of changes in parameters
+     fD.EfyTrace = Efys(:,2:iter);  % trace of resulting expected values
      fD.Efy = Efy; % what we did achieve in quality up to this iteration
-     fD.x0 = x0;   % trace of initial chain elements for each MCMC draw
-
+     fD.x0 = x0(:,1:iter); % trace of initial chain elements for each MCMC draw
+     fD.MSE = MSE;         % mean-squared errors on final results, 
+     fD.MSEperc = MSEperc; % absolute and relative to E[f(X)] magnitudes
+     fD.maxK = fitoptionsbwVK.maxK;
+     fD.eps = eps;
+     fD.fitoptions = fitoptions;
+     fD.fitoptionsbwVK = fitoptionsbwVK;
+     fD.nIters = iter-1; % 'first iteration' is initialization
 end
 
 lambdaHat = lambdaHat(:,fitoptions.maxIter+1);
