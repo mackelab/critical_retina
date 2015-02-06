@@ -36,7 +36,7 @@ if nargin < 4 || isempty(beta)
 end
 
 if nargin < 5 || isempty(eps)
- eps = [0.01;0.01;0.05]; 
+ eps = [0.01;0.05;0.01]; 
 end
 
 if nargin > 6 && ~isempty(a) && ~isempty(tau)
@@ -77,12 +77,10 @@ for i = idxRepet
   end
  end
 
- if isnan(fitoptions.lambda0) % each run needs its own initialization
   fitoptions.lambda0 = zeros(n*(n+3)/2+1,1); 
   fitoptions.lambda0(1:n) = log(EfxNow(1:n)./(1-EfxNow(1:n)));
   fitoptions.lambda0(fitoptions.lambda0==Inf) =  1000; % fairly hacky solu-
   fitoptions.lambda0(fitoptions.lambda0==-Inf)= -1000; % tion if Efx(i) = 0
- end    
  
 
  disp(['fitting on data set', num2str(i), '/', num2str(size(Efx,2))])   
