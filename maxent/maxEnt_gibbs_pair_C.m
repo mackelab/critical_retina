@@ -53,7 +53,7 @@ switch machine
                                    double(xc), pairs-1, m, fm-1, h, J, L);
     case 'laptop'
 [xSampled,xc] = pwGibbsMaxEnt_malloc(int32(nSamples),int32(burnIn),int32(d),...
-                                   xc, pairs-1, m, fm-1, h, J, L);
+                                   double(xc), pairs-1, m, fm-1, h, J, L);
  E = [];       
     otherwise
 [xSampled,xc] = pwGibbsMaxEnt_malloc(int32(nSamples),int32(burnIn),int32(d),...

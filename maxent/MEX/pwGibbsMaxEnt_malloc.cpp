@@ -210,12 +210,12 @@ void mexFunction(int nlhs,mat::mxArray *plhs[],int nrhs,const mat::mxArray *prhs
         /* shove results to mid-term storage and final outputs */
 		if (i > 0) {          //* after burn-in phase is over:
         	for (idx =0; idx<numAll; idx++) {// copy into mid-term storage
-        		xTmp[idx] += pc[idx]; // adds up results from 1000 sweeps 
+        		xTmp[idx] += pc[idx]; // adds up results from 100 sweeps 
             }                         // before passing on to xSampled
             
-        	if ((i % 1000) == 0) {    // every thousand samples ...
+        	if ((i % 100) == 0) {    // every thousand samples ...
             	for (idx = 0; idx<numAll; idx++) { // move to final results 
-            		xSampled[idx] = ((i-1000)*xSampled[idx] + xTmp[idx])/i;	
+            		xSampled[idx] = ((i-100)*xSampled[idx] + xTmp[idx])/i;	
             		xTmp[idx] = 0; // (normalize regularly to avoid 
             	}                  //  numerical overflows)
                 //mexPrintf("\nCurrent sample is # %d ", i);   
