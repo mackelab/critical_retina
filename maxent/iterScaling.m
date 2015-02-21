@@ -1,4 +1,4 @@
-function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, eps, fname, ifSave, hJV, ifbwVK)
+function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, eps, fname, ifSave, hJV, ifbwVK, sig2_l2, sig2_sm)
 % code for fitting a maxEnt model with (improved?) iterative scaling.
 % Minimizes the negative log-likelihood of the data in xTrain under the 
 % maximum entropy model by (blockwise) coordinate descent. 
@@ -47,6 +47,15 @@ else                  % if feeding expectation of features E[f(X)] directly
 end
 clear fxTrain % may take a whole lot of memory 
 
+if nargin < 9 || isempty(sig2_l2)
+  sig2_l2 = 400;
+  fitoptionsbwVK.sig2_l2 = sig2_l2;
+else 
+  fitoptionsbwVK.sig2_l2 = sig2_l2;
+end
+if nargin < 10 || isempty(sig2_sm)
+  sig2_sm = 1; % just a coefficient,  will be multiplied with var(V(K))
+end
 if nargin < 7 || isempty(hJV)
   hJV = ones(3,1); % default: include terms for h, J and V(K) (full model)
 end
@@ -72,10 +81,9 @@ if all(size(fitoptions.burnIn)<2)   % if burnIn is constant for all iters
 end
 
 % fitoptions for the call to minFunc during iterScalingAllVKs()
-fitoptionsbwVK.maxK = find(Efx(end-n:end)==0, 1, 'first')-2;
-fitoptionsbwVK.sig2_l2 = 400;   
+fitoptionsbwVK.maxK = min([find(Efx(end-n:end)==0, 1, 'first')-2,n]);
 fitoptionsbwVK.sig2_sm = []; % will set this for each individual call   
-fitoptionsbwVK.tau = 2;   
+fitoptionsbwVK.tau = 10;   
 fitoptionsbwVK.optTol=1e-100; 
 fitoptionsbwVK.progTol=1e-100; 
 fitoptionsbwVK.display='off';
@@ -106,6 +114,7 @@ fDescrJ = nchoosek(1:n,2)';
 covs.x = Efx((n+1):(n*(n+1)/2)) - ...              % covariance as computed
         (Efx(fDescrJ(1, :)).* Efx(fDescrJ(2, :))); % from Efx
 
+fD.MSEprcs = zeros(4, fitoptions.maxIter);    
 %% 2. Start the update iteration
 %------------------------------------------
 lambdaHat = zeros(length(Efx),fitoptions.maxIter+1);
@@ -188,7 +197,7 @@ end
           
           if ifbwVK
              fitoptionsbwVK.sig2_sm = ... % get strength of V(K)-smoothing 
-                   var(lambdaHat(end-n+1:end-n+fitoptionsbwVK.maxK,iter));               
+           sig2_sm * var(lambdaHat(end-n+1:end-n+fitoptionsbwVK.maxK,iter));               
              [deltaVK, deltaLLVK] = iterScalingAllVKs(Efx(end-n:end),...
                                                       Efy(end-n:end),...
                                            lambdaHat(end-n:end,iter),...
@@ -211,6 +220,13 @@ end
           delta(ic) = -lambdaHat(ic,iter);
 
           if ifbwVK
+             fitoptionsbwVK.sig2_sm = ... % get strength of V(K)-smoothing 
+           sig2_sm * var(lambdaHat(end-n+1:end-n+fitoptionsbwVK.maxK,iter));  
+         %    fitoptionsbwVK.sig2_l2 = sig2_l2 / ...
+         %         (fitoptionsbwVK.sig2_sm + sig2_l2) * sig2_l2;
+         %    fitoptionsbwVK.sig2_sm = fitoptionsbwVK.sig2_sm / ...
+         %         (fitoptionsbwVK.sig2_sm + sig2_l2) * sig2_l2;
+
              [deltaVK, deltaLLVK] = iterScalingAllVKs(Efx(end-n:end),...
                                                       Efy(end-n:end),...
                                            lambdaHat(end-n:end,iter),...
@@ -291,28 +307,35 @@ end
     MSEperc.V = sqrt(MSE.V)/sqrt(mean(Efx(end-n:end).^2));  % mean-squares
     MSEperc.cov = sqrt(MSE.cov)/sqrt(mean(abs(covs.x).^2)); % of Efx
     
+  %   fD.MSEprcs(1,iter) = MSEperc.h;
+  %   fD.MSEprcs(2,iter) = NaN; % not computed here
+  %  fD.MSEprcs(3,iter) = MSEperc.V;
+  %   fD.MSEprcs(4,iter) = MSEperc.cov;
+  
     % Save
-    if ifSave
+    thinning = 10;
+    if ifSave && (mod(iter,thinning)==0)
      
      idxIter = idxj(iter);
      x0Iter  = x0(:,iter);
      lambdaIter = lambdaHat(:,iter);
-     deltaIter = delta;
+     deltaIter = []; % these are large, yet also
+     deltaLL = [];    % reproducible from the rest
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
      fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
              '/', fnames,'.mat'];
      save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
-                             'lambdaIter', 'MSE', 'MSEperc', 'covs') 
+                             'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
     end
     
     % Check for convergence
     % 1. Ran for more than 24 h hours
     tocTime = now; 
-    if (tocTime - ticTime) > 1
-      break;
+    if (tocTime - ticTime) > (n/100)^2 
+      break;      
     end
     % 2. Did more updates than 10 times the number of parameters
-    if iter > (10 * n * (n+3) / 2)
+    if iter >  (10 * n * (n+3) / 2)
       break;
     end
     % 3. Error smaller than tolerance    
@@ -325,23 +348,36 @@ end
     
   end % END MAIN LOOP
 
-     fD.deltaLL = deltaLL;    % currently possible gains in log-likelihood
-     fD.deltaLLs = deltaLLs(1:iter-1);  % trace of realized gains in log-likelihood
-     fD.lambdaTrace = lambdaHat(:,2:iter); % trace of parameter estimates
-     fD.idxUpdate = idxj(2:iter); % trace of parameters picked for updating
-     fD.deltas = deltas(:,1:iter-1);  % trace of sizes of changes in parameters
-     fD.EfyTrace = Efys(:,2:iter);  % trace of resulting expected values
-     fD.Efy = Efy; % what we did achieve in quality up to this iteration
-     fD.x0 = x0(:,1:iter); % trace of initial chain elements for each MCMC draw
-     fD.MSE = MSE;         % mean-squared errors on final results, 
-     fD.MSEperc = MSEperc; % absolute and relative to E[f(X)] magnitudes
-     fD.maxK = fitoptionsbwVK.maxK;
-     fD.eps = eps;
-     fD.fitoptions = fitoptions;
-     fD.fitoptionsbwVK = fitoptionsbwVK;
-     fD.nIters = iter-1; % 'first iteration' is initialization
+     idxIter = idxj(iter);
+     x0Iter  = x0(:,iter);
+     lambdaIter = lambdaHat(:,iter);
+     deltaIter = delta;
+     fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
+     fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
+             '/', fnames,'.mat'];
+     save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
+                             'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
+fD = [];                          
+%      fD.deltaLL = deltaLL;    % currently possible gains in log-likelihood
+%      fD.deltaLLs = deltaLLs(1:iter-1);  % trace of realized gains in log-likelihood
+%      fD.lambdaTrace = lambdaHat(:,2:iter); % trace of parameter estimates
+%      fD.idxUpdate = idxj(2:iter); % trace of parameters picked for updating
+%      fD.deltas = deltas(:,1:iter-1);  % trace of sizes of changes in parameters
+%      fD.EfyTrace = Efys(:,2:iter);  % trace of resulting expected values
+%      fD.Efy = Efy; % what we did achieve in quality up to this iteration
+%      fD.x0 = x0(:,1:iter); % trace of initial chain elements for each MCMC draw
+%      fD.MSE = MSE;         % mean-squared errors on final results, 
+%      fD.MSEperc = MSEperc; % absolute and relative to E[f(X)] magnitudes
+%      fD.maxK = fitoptionsbwVK.maxK;
+%      fD.eps = eps;
+%      fD.fitoptions = fitoptions;
+%      fD.fitoptionsbwVK = fitoptionsbwVK;
+%      fD.nIters = iter-1; % 'first iteration' is initialization
+%      fD.MSEprcs = fD.MSEprcs(:, 2:iter);    
+
 end
 
-lambdaHat = lambdaHat(:,fitoptions.maxIter+1);
-
+%lambdaHat = lambdaHat(:,iter);
+lambdaHat = []; 
+disp('break breaks stuff')
 end
