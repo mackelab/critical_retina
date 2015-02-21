@@ -17,7 +17,7 @@ dims = ones(1,ndims(a));
 dims(dim) = size(a,dim);
 a = a - repmat(y, dims);
 s = y + log(sum(exp(a),dim));
-i = find(~finite(y));
+i = find(~isfinite(y));
 if ~isempty(i)
   s(i) = y(i);
 end
