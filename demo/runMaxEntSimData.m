@@ -1,4 +1,4 @@
-function runMaxEntSimData(n, idxRepet, fitoptions, beta, eps, a,tau, hJV, fname)
+function runMaxEntSimData(n, idxRepet, fitoptions, beta, eps, a,tau, hJV, fname, sig2_l2, sig2_sm)
 % Fits a maximum entropy model with parameters for feature functions f(X)
 % to data from the simulation of a population of RGCs. 
 % Loads pre-computed data and applies subsets of the model 
@@ -36,7 +36,7 @@ if nargin < 4 || isempty(beta)
 end
 
 if nargin < 5 || isempty(eps)
- eps = [0.01;0.05;0.01]; 
+ eps = [0.01;0.05;0.01]; % tolerance for E[X] (h), cov(X) (J), P(K) (V(K)).  
 end
 
 if nargin > 6 && ~isempty(a) && ~isempty(tau)
@@ -55,8 +55,18 @@ end                      % augmented by the iteration number
 fname = [fname, 'n', num2str(n)]; 
 
 
+if nargin < 10 || isempty(sig2_l2)
+   sig2_l2 = 400;
+end
 
-load('/home/marcel/criticalityIterScaling/data/EfxSimData.mat')
+if nargin < 11 || isempty(sig2_sm)
+   sig2_sm = 100;
+end
+
+
+load('/home/marcel/criticalityIterScaling/data/EfxCB2Data.mat')
+%load('/home/marcel/criticalityIterScaling/data/EfxFFFData.mat')
+%load('/home/marcel/criticalityIterScaling/data/EfxSimData.mat')
 % gives Efx (data), idxSubsample (neuron index table), par (for check-up)
 
 ifSave = true; % always store results 
@@ -82,12 +92,12 @@ for i = idxRepet
   fitoptions.lambda0(fitoptions.lambda0==Inf) =  1000; % fairly hacky solu-
   fitoptions.lambda0(fitoptions.lambda0==-Inf)= -1000; % tion if Efx(i) = 0
  
-
  disp(['fitting on data set', num2str(i), '/', num2str(size(Efx,2))])   
  mkdir([fname, 'idxRepet', num2str(i)])
- [lambdaHat(:,i), fD{i}] = iterScaling(EfxNow, fitoptions, beta, eps, ...
+ [~, ~] = iterScaling(EfxNow, fitoptions, beta, eps, ...
                                        [fname, 'idxRepet', num2str(i)], ...
-                                       ifSave, hJV, ifbwVK);
+                                       ifSave, hJV, ifbwVK, ...
+                                       sig2_l2, sig2_sm);
  
 end
 
