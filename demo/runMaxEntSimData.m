@@ -23,7 +23,7 @@ n = 10*n;  % if only growing populations in steps of 10, this makes the
 if nargin < 3 || isempty(fitoptions)
  fitoptions.nSamples = 3200; % may be overwritten below by 'a' and 'tau'  
  fitoptions.burnIn  = 200;
- fitoptions.maxIter = min( 10*(n*(n+3)/2), 10000);
+ fitoptions.maxIter = min( 100*(n*(n+3)/2), 10000);
  fitoptions.maxInnerIter = 1;    
  fitoptions.lambda0 = NaN;   % catch this later 
  fitoptions.regular = 'l1';  % not that l1 - regularization currently doesn't include the V(K)-Terms
@@ -64,9 +64,9 @@ if nargin < 11 || isempty(sig2_sm)
 end
 
 
-load('/home/marcel/criticalityIterScaling/data/EfxCB2Data.mat')
+%load('/home/marcel/criticalityIterScaling/data/EfxCB2Data.mat')
 %load('/home/marcel/criticalityIterScaling/data/EfxFFFData.mat')
-%load('/home/marcel/criticalityIterScaling/data/EfxSimData.mat')
+load('/home/marcel/criticalityIterScaling/data/EfxSimData.mat')
 % gives Efx (data), idxSubsample (neuron index table), par (for check-up)
 
 ifSave = true; % always store results 
@@ -101,6 +101,4 @@ for i = idxRepet
  
 end
 
-
-        
 end % end function

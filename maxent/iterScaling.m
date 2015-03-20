@@ -48,14 +48,19 @@ end
 clear fxTrain % may take a whole lot of memory 
 
 if nargin < 9 || isempty(sig2_l2)
-  sig2_l2 = 400;
-  fitoptionsbwVK.sig2_l2 = sig2_l2;
+  fitoptionsbwVK.sig2_l2 = 400;
 else 
   fitoptionsbwVK.sig2_l2 = sig2_l2;
+  clear sig2_l2;
 end
 if nargin < 10 || isempty(sig2_sm)
-  sig2_sm = 1; % just a coefficient,  will be multiplied with var(V(K))
+  sig2_sm = 1; 
 end
+fitoptionsbwVK.sig2_sm = sig2_sm*glmval([.009;.0436;-.0064;.0019], ...
+                     [(n/10),(n/10)^2,(n/10)^3], 'identity'); clear sig2_sm     
+   % get strength of V(K)-smoothing (regression coefficients obtained from 
+   % parameter variances of previous fitting results)
+   
 if nargin < 7 || isempty(hJV)
   hJV = ones(3,1); % default: include terms for h, J and V(K) (full model)
 end
@@ -82,7 +87,6 @@ end
 
 % fitoptions for the call to minFunc during iterScalingAllVKs()
 fitoptionsbwVK.maxK = min([find(Efx(end-n:end)==0, 1, 'first')-2,n]);
-fitoptionsbwVK.sig2_sm = []; % will set this for each individual call   
 fitoptionsbwVK.tau = 10;   
 fitoptionsbwVK.optTol=1e-100; 
 fitoptionsbwVK.progTol=1e-100; 
@@ -174,7 +178,7 @@ end
 
   for iter = minIter:fitoptions.maxIter+1
       
-    disp([num2str(iter-1), '/' num2str(fitoptions.maxIter)])
+    disp([num2str(iter-1), '/' num2str(fitoptions.maxIter), ', #sweeps = ', num2str(fitoptions.nSamples(iter))])
    
     lambdaHat(:,iter)  = lambdaHat(:,iter-1);
     [Efy,~,x0(:,iter)] = maxEnt_gibbs_pair_C(fitoptions.nSamples(iter), ...
@@ -195,9 +199,7 @@ end
         case 'none' % immediately done
           delta = log( (Efx .* ( 1 - Efy )) ./ (Efy .* ( 1 - Efx )) );
           
-          if ifbwVK
-             fitoptionsbwVK.sig2_sm = ... % get strength of V(K)-smoothing 
-           sig2_sm * var(lambdaHat(end-n+1:end-n+fitoptionsbwVK.maxK,iter));               
+          if ifbwVK           
              [deltaVK, deltaLLVK] = iterScalingAllVKs(Efx(end-n:end),...
                                                       Efy(end-n:end),...
                                            lambdaHat(end-n:end,iter),...
@@ -219,14 +221,7 @@ end
           % \delta_0 part
           delta(ic) = -lambdaHat(ic,iter);
 
-          if ifbwVK
-             fitoptionsbwVK.sig2_sm = ... % get strength of V(K)-smoothing 
-           sig2_sm * var(lambdaHat(end-n+1:end-n+fitoptionsbwVK.maxK,iter));  
-         %    fitoptionsbwVK.sig2_l2 = sig2_l2 / ...
-         %         (fitoptionsbwVK.sig2_sm + sig2_l2) * sig2_l2;
-         %    fitoptionsbwVK.sig2_sm = fitoptionsbwVK.sig2_sm / ...
-         %         (fitoptionsbwVK.sig2_sm + sig2_l2) * sig2_l2;
-
+          if ifbwVK 
              [deltaVK, deltaLLVK] = iterScalingAllVKs(Efx(end-n:end),...
                                                       Efy(end-n:end),...
                                            lambdaHat(end-n:end,iter),...
@@ -324,8 +319,8 @@ end
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
      fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
              '/', fnames,'.mat'];
-     save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
-                             'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
+     %save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
+     %                        'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
     end
     
     % Check for convergence
