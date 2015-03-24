@@ -1,4 +1,4 @@
-function runMaxEntSimData(n, idxRepet, fitoptions, beta, eps, a,tau, hJV, fname, sig2_l2, sig2_sm)
+function runMaxEntSimData(n, idxRepet, fitoptions, beta, eps, a,tau, hJV, fname, sig2_l2, sig2_sm, stim)
 % Fits a maximum entropy model with parameters for feature functions f(X)
 % to data from the simulation of a population of RGCs. 
 % Loads pre-computed data and applies subsets of the model 
@@ -48,7 +48,9 @@ if nargin < 8 || isempty(hJV)
  hJV = ones(3,1); % default: all parameters, i.e. full model
 end
 
-folder = '/home/marcel/criticalityIterScaling/results/'; % output folder
+root_path = fullpath(fileparts(mfilename('fullpath')), '..', '..');
+
+folder = fullfile(root_path, 'results')); % output folder
 if nargin < 9 || isempty(fname)    
  fname = date;           % note that fname will be further 
 end                      % augmented by the iteration number
@@ -63,11 +65,17 @@ if nargin < 11 || isempty(sig2_sm)
    sig2_sm = 100;
 end
 
-
-%load('/home/marcel/criticalityIterScaling/data/EfxCB2Data.mat')
-%load('/home/marcel/criticalityIterScaling/data/EfxFFFData.mat')
-load('/home/marcel/criticalityIterScaling/data/EfxSimData.mat')
 % gives Efx (data), idxSubsample (neuron index table), par (for check-up)
+switch(lower(stim))
+case('cb2')
+  load(fullfile(root_path, 'data', 'EfxCB2Data.mat'));
+case('fff')
+  load(fullfile(root_path, 'data', 'EfxFFFData.mat'));
+case('sim')
+  load(fullfile(root_path, 'data', 'EfxSimData.mat'));
+otherwise:
+  error('Unknown stimulus: %s', stim)
+end
 
 ifSave = true; % always store results 
 ifbwVK = true; % always do block-wise update 
