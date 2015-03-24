@@ -1,0 +1,22 @@
+#!/bin/sh
+if [ -z "$MATLAB_BIN" ]; then 
+	MATLAB_BIN="matlab";
+fi
+
+if [ -z "$NET_SIZE" ]; then 
+	echo "NET_SIZE must be set!";
+	exit 1;
+fi
+
+if [ -z "$IDX_DATA" ]; then 
+	echo "NET_SIZE must be set!";
+	exit 1;
+fi
+
+if [ -z "$STIMULUS" ]; then 
+	echo "NET_SIZE must be set!";
+	exit 1;
+fi
+
+$MATLAB_BIN -nojvm -singleCompThread -r "runMaxEntSimData($NET_SIZE, $IDX_DATA, [], [], [], 800, 250, [1;1;1], 'hJV${STIMULUS}', 400, 10, '${STIMULUS}'); quit;"
+	
