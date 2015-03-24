@@ -56,10 +56,13 @@ end
 if nargin < 10 || isempty(sig2_sm)
   sig2_sm = 1; 
 end
-fitoptionsbwVK.sig2_sm = sig2_sm*glmval([.009;.0436;-.0064;.0019], ...
-                     [(n/10),(n/10)^2,(n/10)^3], 'identity'); clear sig2_sm     
-   % get strength of V(K)-smoothing (regression coefficients obtained from 
-   % parameter variances of previous fitting results)
+
+% set strength of V(K)-smoothing
+fitoptionsbwVK.sig2_sm = sig2_sm * (0.0016*(n/10)^3 + 0.05);
+%fitoptionsbwVK.sig2_sm = sig2_sm*glmval([.009;.0436;-.0064;.0019], ...
+%                    [(n/10),(n/10)^2,(n/10)^3], 'identity'); clear sig2_sm     
+% (regression coefficients obtained from 
+%  parameter variances of previous fitting results)
    
 if nargin < 7 || isempty(hJV)
   hJV = ones(3,1); % default: include terms for h, J and V(K) (full model)
@@ -319,14 +322,14 @@ end
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
      fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
              '/', fnames,'.mat'];
-     %save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
-     %                        'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
+     save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
+                             'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
     end
     
     % Check for convergence
-    % 1. Ran for more than 24 h hours
+    % 1. Ran for more than 72 h hours
     tocTime = now; 
-    if (tocTime - ticTime) > (n/100)^2 
+    if (tocTime - ticTime) >  3 * (n/100)^2 
       break;      
     end
     % 2. Did more updates than 10 times the number of parameters
@@ -339,7 +342,10 @@ end
          (MSEperc.cov  < eps(2)) ) 
           break;
     end
-   
+    % after some time even before 'convergence by time', freeze #sweeps
+    if (tocTime - ticTime) > (n/100)^2 
+       fitoptions.nSamples(iter:end) = fitoptions.nSamples(iter);     
+    end
     
   end % END MAIN LOOP
 
