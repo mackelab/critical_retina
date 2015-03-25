@@ -324,7 +324,7 @@ end
      deltaIter = []; % these are large, yet also
      deltaLL = [];    % reproducible from the rest
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
-     fnames = fullfile(PROJECT_PATH, 'results', fname, [fnames,'.mat']));
+     fnames = fullfile(PROJECT_PATH, 'results', fname, [fnames,'.mat']);
      save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
                              'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
     end
@@ -357,7 +357,7 @@ end
      lambdaIter = lambdaHat(:,iter);
      deltaIter = delta;
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
-     fnames = fullfile(PROJECT_PATH, 'results', fname, [fnames,'.mat']));
+     fnames = fullfile(PROJECT_PATH, 'results', fname, [fnames,'.mat']);
      save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
                              'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
 fD = [];                          
