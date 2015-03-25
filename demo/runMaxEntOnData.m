@@ -48,9 +48,6 @@ if nargin < 8 || isempty(hJV)
  hJV = ones(3,1); % default: all parameters, i.e. full model
 end
 
-root_path = fullpath(fileparts(mfilename('fullpath')), '..', '..');
-
-folder = fullfile(root_path, 'results')); % output folder
 if nargin < 9 || isempty(fname)    
  fname = date;           % note that fname will be further 
 end                      % augmented by the iteration number
@@ -66,14 +63,15 @@ if nargin < 11 || isempty(sig2_sm)
 end
 
 % gives Efx (data), idxSubsample (neuron index table), par (for check-up)
+global PROJECT_PATH;
 switch(lower(stim))
 case('cb2')
-  load(fullfile(root_path, 'data', 'EfxCB2Data.mat'));
+  load(fullfile(PROJECT_PATH, 'data', 'EfxCB2Data.mat'));
 case('fff')
-  load(fullfile(root_path, 'data', 'EfxFFFData.mat'));
+  load(fullfile(PROJECT_PATH, 'data', 'EfxFFFData.mat'));
 case('sim')
-  load(fullfile(root_path, 'data', 'EfxSimData.mat'));
-otherwise:
+  load(fullfile(PROJECT_PATH, 'data', 'EfxSimData.mat'));
+otherwise
   error('Unknown stimulus: %s', stim)
 end
 
@@ -84,7 +82,7 @@ lambdaHat = zeros(n*(n+3)/2+1,size(Efx,2));
 fD        = cell(size(Efx,2),1); % might run out of memory for many repets
 
 EfxNow = zeros(n*(n*3)/2+1, 1);
-cd /home/marcel/criticalityIterScaling/results/
+cd(fullfile(PROJECT_PATH, 'results'));
 for i = idxRepet
 
  % find data moments E[f(X)] for currently chosen n and idxRepet

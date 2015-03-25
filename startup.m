@@ -14,7 +14,9 @@ addpath(genpath('C:\Users\Loki\Desktop\Project\Funs\Misc')) % for minFunc
 %addpath([pwd,'/third_party/minFunc_2012/minFunc/compiled'])
 %addpath([pwd,'/third_party/minFunc_2012/autoDif'])
 
-
+% Set global project path
+global PROJECT_PATH;
+PROJECT_PATH = fullfile(fileparts(mfilename('fullpath')), '..');
 
 %compile C_Code  if neceessary
 compile_c=0;

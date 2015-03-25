@@ -33,6 +33,9 @@ function [lambdaHat, fD] = iterScaling(xTrain, fitoptions, beta, eps, fname, ifS
 %      .Efx:         sought-after data means E_emp[f(X)]
 %      .Efy:         actually returned model means E_lambda[f(X)] 
 
+% Get project path
+global PROJECT_PATH;
+
 ticTime = now;
 
 % 1. Input formatting and pre-computations
@@ -97,6 +100,7 @@ fitoptionsbwVK.display='off';
 fitoptionsbwVK.MaxIter=3000;
 fitoptionsbwVK.maxFunEvals=10000;
 
+
 idxBad = (Efx == 0); % identify pathological cases where lambda_i -> -Inf
 
 if ~hJV(1) % declare parameters of h to be 'bad', i.e. do not fit them
@@ -159,7 +163,7 @@ for r = 1:fitoptions.nRestart
 
 if ~isempty(fname)
   % Check for previous results from potentially cancelled run
-  cd(['/home/marcel/criticalityIterScaling/results/',fname,'/'])
+  cd(fullfile(PROJECT_PATH, 'results', fname));
   names = strsplit(ls); % may take forever...
   names = sort(names);
   if ~isempty(names) && ~strcmp(names{end},'') % '' is always first after sorting
@@ -167,7 +171,7 @@ if ~isempty(fname)
    minIter = str2num(lfile(end-8:end-4)); 
    if minIter < fitoptions.maxIter
     load(lfile); % 
-    cd '/home/marcel/criticalityIterScaling/' % get out of crowded /results!
+    cd(PROJECT_PATH); % get out of crowded /results!
      % gives Efy, deltaIter, deltaLL, idxIter, lambdaIter, x0Iter
     x0(:,minIter-1) = x0Iter; 
     lambdaHat(:,minIter-1) = lambdaIter; 
@@ -320,8 +324,7 @@ end
      deltaIter = []; % these are large, yet also
      deltaLL = [];    % reproducible from the rest
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
-     fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
-             '/', fnames,'.mat'];
+     fnames = fullfile(PROJECT_PATH, 'results', fname, [fnames,'.mat']));
      save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
                              'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
     end
@@ -354,8 +357,7 @@ end
      lambdaIter = lambdaHat(:,iter);
      deltaIter = delta;
      fnames = [fname,'_Iter_',num2str(iter, '%0.5d')];
-     fnames=['/home/marcel/criticalityIterScaling/results/',fname,...
-             '/', fnames,'.mat'];
+     fnames = fullfile(PROJECT_PATH, 'results', fname, [fnames,'.mat']));
      save(fnames, 'deltaLL', 'deltaIter', 'idxIter', 'Efy', 'x0Iter', ...
                              'lambdaIter', 'MSE', 'MSEperc', 'covs', 'thinning') 
 fD = [];                          

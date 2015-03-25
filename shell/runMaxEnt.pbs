@@ -18,5 +18,5 @@ if [ -z "$STIMULUS" ]; then
 	exit 1;
 fi
 
-$MATLAB_BIN -nojvm -singleCompThread -r "runMaxEntSimData($NET_SIZE, $IDX_DATA, [], [], [], 800, 250, [1;1;1], 'hJV${STIMULUS}', 400, 10, '${STIMULUS}'); quit;"
+$MATLAB_BIN -nojvm -singleCompThread -r "runMaxEntOnData($NET_SIZE, $IDX_DATA, [], [], [], 800, 250, [1;1;1], 'hJV${STIMULUS}', 400, 10, '${STIMULUS}'); quit;"
 	
