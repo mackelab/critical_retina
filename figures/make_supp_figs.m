@@ -47,10 +47,10 @@ for idxGroup = 1:3
   for r = 1:2
    switch r
     case 1
-      load(['/home/mackelab/Desktop/Projects/Criticality/results/checkRB/checkRB_RB100idxRepet', ...
+      load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_RB100idxRepet', ...
              num2str(idxRepet), 'T1.mat'])
     case 2
-      load(['/home/mackelab/Desktop/Projects/Criticality/results/checkRB/checkRB_noRB100idxRepet', ...
+      load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_noRB100idxRepet', ...
              num2str(idxRepet), 'T1.mat'])
    end
    tmp{r} = Efy(:,2:end-1);
@@ -202,10 +202,10 @@ for idxGroup = 2
   for r = 1:2
    switch r
     case 1
-     load(['../results/feature_moments_test_rao_blackwell/', ...
+     load(['../results/method_validation/feature_moments_test_rao_blackwell/', ...
            'checkRB_RB100idxRepet', num2str(idxRepet), 'T1.mat'])
     case 2
-     load(['../results/feature_moments_test_rao_blackwell/', ...
+     load(['../results/method_validation/feature_moments_test_rao_blackwell/', ...
            'checkRB_noRB100idxRepet', num2str(idxRepet), 'T1.mat'])
    end
    tmp{r} = Efy(:,2:end-1);
@@ -414,8 +414,8 @@ clearvars -except figure42 axesThickness clrs fontName fontSize fontSizeLegend f
 figureS1 = figure('Tag', 'figS1', 'units','centimeters','position',...
                   [0,0,19,11]);
 n = 100;
-load(['/home/mackelab/Desktop/Projects/Criticality/results/final/hJVsn', num2str(n), 'asfinal'])
-load(['/home/mackelab/Desktop/Projects/Criticality/results/EfxSimData.mat'])
+load(['../results/method_validation/K_pairwise_fit_n100/nat_n', num2str(n), 'asfinal'])  
+load(['../results/K_pairwise_final/Efx_nat.mat'])
 mx = 0;
 
 clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;
@@ -541,12 +541,13 @@ set(gca, 'XTick', [0, 0.4])
 set(gca, 'YTick', [0, 0.4])
 axis([0, 0.48, 0, 0.48])
 
-stims = { 'cb2', 's', 'FFF'}; trues = {'CB2', 'Sim', 'FFF'}; 
-MSEs = cell(size(stims));
+trues = {'cb', 'nat', 'fff'}; 
+MSEs = cell(size(trues));
 for j = 1:3
     
-  load(['/home/mackelab/Desktop/Projects/Criticality/results/final/hJV', stims{j},'n', num2str(n), 'asfinal'])  
-  load(['/home/mackelab/Desktop/Projects/Criticality/results/Efx', trues{j}, 'Data.mat'])
+  load(['../results/method_validation/K_pairwise_fit_n100/', trues{j},'_n', num2str(n), 'asfinal'])  
+  load(['../results/K_pairwise_final/Efx_', trues{j}, '.mat'])
+
   MSEs{j} = zeros(length(fD),3);
   for i = 1:length(fD)
    Efy = fD{i}.Efy;
@@ -596,58 +597,10 @@ set(gca, 'XTickLabel', {'cb', 'nat', 'fff'})
 
 clearvars -except figureS1 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
-%% flat model \alpha, \beta for dichotomized Gaussian data
-
-figureS4 = figure('Tag', 'figS4', 'units','centimeters','position',...
-                  [0,0,19,11]);
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS4_ab.mat')
-lgnd = cell(length(output),1);
-clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;
-for r = length(output):-1:1
-  subplot(1,2,1), 
-  plot(log(output{r}.Ns), output{r}.as, 's-', 'color', clrs(r,:), ...
-       'linewidth', axesThickness), 
-  hold on, 
-  subplot(1,2,2), 
-  plot(log(output{r}.Ns), output{r}.bs, 's-', 'color', clrs(r,:), ...
-       'linewidth', axesThickness), 
-  hold on, 
-  lgnd{length(output)+1-r} = ['\rho = ', num2str(output{r}.rho)];
-end
-
-
-subplot(1,2,1)
-set(gca, 'Linewidth', axesThickness)
-axis([log(0.8*20),log(1.25*1280),0, 6.5]); %axis autoy
-set(gca, 'XTick', log(output{r}.Ns));
-set(gca, 'XTickLabel', output{r}.Ns);
-set(gca, 'YTick', [0, 3, 6])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-xlabel('population size'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('beta-binomial parameter \alpha', 'FontName', fontName, ...
-       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-subplot(1,2,2)
-set(gca, 'Linewidth', axesThickness)
-axis([log(0.8*20),log(1.25*1280),0, 200]); %axis autoy
-set(gca, 'XTick', log(output{r}.Ns));
-set(gca, 'XTickLabel', output{r}.Ns);
-set(gca, 'YTick', [0, 100])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-legend(lgnd); legend boxoff
-xlabel('population size'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('beta-binomial parameter \beta', 'FontName', fontName, ...
-       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-
-clearvars -except figureS4 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
-     
 %% supplementary figure 3: randomized P(K) and retained criticality
 figureS3 = figure('Tag', 'figS3', 'units','centimeters','position', ...
                   [0,0,19,11]);
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS_data_shuffle.mat')
+load('fig_data/figS3_data_shuffle.mat')
 
 clrs = copper(18);
 
@@ -730,7 +683,7 @@ clrs = copper(15);
 clrs = clrs(end:-1:1,:);
 
 subplot(1,2,1)
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS2_data.mat')
+load('fig_data/figS4_data.mat')
 for i = 15:-1:1, 
     plot(Ts, mean(squeeze(cN(i,:,:)),1), 'color', clrs(i,:), ...
          'linewidth', 2.5), hold on; 
@@ -756,7 +709,7 @@ ylabel('specific heat', 'FontName', fontName, ...
 
 subplot(1,2,2)
 clear cN Ns Ts
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS2_data_raw.mat')
+load('fig_data/figS4_data_raw.mat')
 for i = 15:-1:1, 
     plot(Ts, mean(squeeze(cN(i,:,:)),1), 'color', clrs(i,:), ...
          'linewidth', 2.5), hold on; 
@@ -806,6 +759,8 @@ for i = 1:31
     str = num2str(Temps(i));
     disp(str)
     str(str=='.') = '_';
+    
+%    load(['../results/method_validation/specific_heat_samples_long_runs/','longRun100idxRepet1T',str,'.mat']) 
     load(['/home/mackelab/Desktop/Projects/Criticality/results/VarE_long_runs/longRun100idxRepet1T',str,'.mat'])
     
     subplot(1,3,1)
@@ -918,409 +873,4 @@ ylabel('specific heat', 'FontName', fontName, ...
        'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
 
 clearvars -except figureS3 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
-
-%% old figure '4' is the figure summarising effects of subsampling schemes. 
-% we also simulated a large-scale version of our simulation with N = 6000
-% cells, to demonstrate full saturation of the specific heat growth under
-% spatially structured subsampling.
-
-splitFigs = true;
-
-if ~splitFigs
-  figure4old = figure('Tag', 'fig4', 'units','normalized','position',...
-                   [0,0,0.99,0.99]);
-end
-
-% subplot a) plot receptive field centers
-if splitFigs
-  figure(41)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (1:34)', (0:8)*34)))
-end
-
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig4/fig4_data.mat')
-cell_positions(1,:) = cell_positions(1,:) - 150;
-cell_positions(2,:) = cell_positions(2,:) - 600;
-
-n = 6000;
-magFactor = 1;
-clrs = copper(2*n);
-clrs = clrs(end/2+1:end, :);
-for i = 1:n
- plot(double(pixel_size)*cell_positions(1,idxC(i)), ...
-      double(pixel_size)*cell_positions(2,idxC(i)), 'o', ...
-      'color', clrs(i,:), 'linewidth', 1.25, 'markerSize', 3)
- hold on
-end
-hold off
-set(gca, 'YTick', double(pixel_size)*[-100,0,100]);
-set(gca, 'YTickLabel',               [-100,0,100]);
-set(gca, 'XTick', double(pixel_size)*[-250,0,250]);
-set(gca, 'XTickLabel',               [-250,0,250]);
-set(gca, 'XAxisLocation', 'top')
-set(gca, 'visible', 'on')
-set(gca, 'Linewidth', axesThickness)
-box off; set(gca, 'TickDir' ,'out')
-axis(magFactor*double(pixel_size)*[-480,480,-150,150])
-line(magFactor*double(pixel_size)*[-480,480], ...
-     double(pixel_size)*magFactor*[150,150], ...
-     'color', 'k', 'linewidth', axesThickness)
-line(magFactor*double(pixel_size)*[-480,480],...
-    -double(pixel_size)*magFactor*[150,150], ...
-     'color', 'k', 'linewidth', axesThickness)
-line( magFactor*double(pixel_size)*[480,480], ...
-      double(pixel_size)*magFactor*[-150,150], ...
-     'color', 'k', 'linewidth', axesThickness)
-line(-magFactor*double(pixel_size)*[480,480], ...
-      double(pixel_size)*magFactor*[-150,150], ...
-    'color', 'k', 'linewidth', axesThickness)
-txt = ['{\fontname{',fontName,'}\fontsize{', ...
-       num2str(fontSizeXlabel),'}\mu}'];
-set(gca, 'FontSize', fontSize)
-xlabel(['x-coordinate [', txt,'m]'], 'FontName', fontName, ...
-        'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel(['y-coordinate [', txt,'m]'], 'FontName', fontName, ...
-        'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-
-% subplot b) plot correlation matrix
-if splitFigs
-  figure(42)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (1:10)', (10:20)*34)))
-end
-n = 6000;
-corrsSorted = output.spkCorrs(idxC(1:n),idxC(1:n));
-corrsSorted = corrsSorted - diag(diag(corrsSorted));
-imagesc(corrsSorted);
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [1000,3000,5000])
-set(gca, 'YTick', [1000,3000,5000])
-box off; set(gca, 'TickDir' ,'out')
-clear output
-
-
-% subplot c) cell distance vs. correlation
-if splitFigs
-  figure(43)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (13:18)', (11:19)*34)))
-end
-Y = corrsSorted(logical(triu(ones(size(corrsSorted)),1)));
-dists = zeros(n);
-for i = 1:n
- for j = i+1 : n
-  dists(i,j) = sum( (cell_positions(:,idxC(i)) ...
-                    -cell_positions(:,idxC(j)) ).^2 );
- end
-end
-dists = sqrt( dists );
-X = dists(logical(triu(ones(size(corrsSorted)),1)));
-x = floor(min(X)) : ceil(max(X));
-[~, idx] = histc(X, x);
-m = zeros(size(x)); v = zeros(size(x));
-for i = 1:length(x)
-  tmp = Y(idx == x(i));
-  m(i) = mean(tmp);
-  v(i) = var(tmp);
-end
-
-clrs = copper(2*length(x));
-h = area(x, [m - sqrt(v); 2*sqrt(v)]'); 
-h(2).FaceColor = clrs(round(length(x)*2/3),:); h(1).FaceColor = [1,1,1];
-h(2).EdgeColor = [1,1,1]; h(1).EdgeColor = [1,1,1];
-hold on;
-clrs = copper(2*length(x)); clrs = clrs(end/2+1:end,:);
-for i = 2:length(x)
- plot([x(i-1),x(i)], [m(i-1),m(i)], 'color', clrs(i-1,:), 'linewidth', 2); 
-end
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [0, 500, 1000])
-set(gca, 'Linewidth', axesThickness)
-xlabel('receptive field center distance', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel('correlation', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
-       'FontWeight', fontWeight )
-box off; set(gca, 'TickDir', 'out')
-axis([0, 1030, -0.02, 0.42])
-set(gca, 'Ytick', [0,0.2,0.4])
-hold off
-
-%% subplot d) plot population size vs. avg. correlation
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig4/fig4lin_data.mat')
-if splitFigs
-  figure(44)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (21:26)', (11:19)*34)))
-end
-tmp = zeros(length(idxN), 1);
-for i = 1:length(idxN)
-   tmp(i) = mean( vec(corrsSorted(idxN{i}, idxN{i})) );
-end
-plot(-10, -10, 'k', 'linewidth', 2); hold on; plot(-10,-10, ...
-      'color', clrs(ceil(3/4*size(clrs,1)),:), 'linewidth', 2);
-hold on
-plot(-10, -10, 'k', 'linewidth', 2); hold on; plot(-10,-10, ...
-      'color', 'k', 'linewidth', 2);
-for i = 2:300
-  plot([Ns(i-1),Ns(i)], [tmp(i-1), tmp(i)], 'color', clrs(i-1,:), ...
-        'linewidth', 2), hold on
-end
-
-% subplot e) plot c(T=1) vs. population size
-if splitFigs
-  figure(45)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (29:34)', (11:19)*34)))
-end
-[~, idxT] = min(abs(Ts - 1));
-for i = 2:300
-  plot([Ns(i-1),Ns(i)], [squeeze(cN(i-1,:,idxT)),squeeze(cN(i,:,idxT))],...
-        'color', clrs(i-1,:), 'linewidth', 2), hold on
-end
-
-
-% subplot d) - e) once more with data from random subsampling added on top
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig4/fig4rnd_data.mat')
-if splitFigs
-  figure(44)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (21:26)', (11:19)*34)))
-end
-tmp = zeros(length(idxN), idxRep);
-for i = 1:length(idxN)
-  for t = 1:idxRep
-   tmp(i,t) = mean( vec(corrsSorted(idxN{i}(:,t), idxN{i}(:,t))) );
-  end
-end
-tmp = mean(tmp,2);
-plot(Ns, tmp, 'k', 'linewidth', 2)
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [0, 3000, 6000])
-set(gca, 'YTick', [0, 0.02, 0.04]) 
-xlabel('population size', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel('average correlation', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off; set(gca, 'TickDir', 'out')
-axis([0, 6020, 0, 0.065])
-set(gca, 'Ytick', [0,0.02,0.04,0.06])
-legend('random', 'spatial', 'location', 'North')
-hold off
-
-if splitFigs
-  figure(45)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (29:34)', (11:19)*34)))
-end
-for t = 1:idxRep
- tmp = squeeze(cN(:,t,idxT))';
- plot(Ns, tmp, 'color', 'k', 'linewidth', 2), hold on
-end
-hold off
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [0, 3000, 6000])
-xlabel('population size', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel('specific heat at T = 1', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off; set(gca, 'TickDir', 'out')
-set(gca, 'Ytick', [0,6,12,18])
-axis([0, 6020, 0, 19.5])
-hold off
-
-
-%% spatial vs. uniform subsampling results for checkerboard and full-field flicker responses
-figureS7 = figure('Tag', 'figS7', 'units','centimeters','position',...
-                  [0,0,19,11]);
-
-cminb = Inf; cmaxb = -Inf;
-for r = 1:2
-  switch r
-      case 1
-        load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_cb_data.mat')
-      case 2
-        load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_fff_data.mat')
-  end
-
-  n = 6000;
-  corrsSorted = output.spkCorrs(idxC(1:n),idxC(1:n));
-  corrsSorted = corrsSorted - diag(diag(corrsSorted));
-  cminb = min([cminb, min(corrsSorted(:))]);
-  cmaxb = max([cmaxb, max(corrsSorted(:))]);
-end
-    
-for r = 1:2
-    switch r
-        case 1
-          load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_cb_data.mat')
-        case 2
-          load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_fff_data.mat')
-    end
-    
-% subplot b) plot correlation matrix
-
-  subplot(21,34,vec(bsxfun(@plus,  (1:10)', ((r-1)*10 + (1:9))*34)))
-
-n = 6000;
-corrsSorted = output.spkCorrs(idxC(1:n),idxC(1:n));
-corrsSorted = corrsSorted - diag(diag(corrsSorted));
-imagesc(corrsSorted, [cminb, cmaxb]);
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [1000,3000,5000])
-set(gca, 'YTick', [1000,3000,5000])
-box off; set(gca, 'TickDir' ,'out')
-clear output
-
-% subplot c) cell distance vs. correlation
-
-  subplot(21,34,vec(bsxfun(@plus,  (13:18)', ((r-1)*10 + (1:9))*34)))
-
-Y = corrsSorted(logical(triu(ones(size(corrsSorted)),1)));
-dists = zeros(n);
-for i = 1:n
- for j = i+1 : n
-  dists(i,j)=sum((cell_positions(:,idxC(i))-cell_positions(:,idxC(j))).^2);
- end
-end
-dists = sqrt( dists );
-X = dists(logical(triu(ones(size(corrsSorted)),1)));
-x = floor(min(X)) : ceil(max(X));
-[~, idx] = histc(X, x);
-m = zeros(size(x)); v = zeros(size(x));
-for i = 1:length(x)
-  tmp = Y(idx == x(i));
-  m(i) = mean(tmp);
-  v(i) = var(tmp);
-end
-clrs = copper(2*length(x));
-h = area(x, [m - sqrt(v); 2*sqrt(v)]'); 
-h(2).FaceColor = clrs(round(length(x)*2/3),:); h(1).FaceColor = [1,1,1];
-h(2).EdgeColor = [1,1,1]; h(1).EdgeColor = [1,1,1];
-hold on;
-clrs = copper(2*length(x)); clrs = clrs(end/2+1:end,:);
-
-plot(x, m, 'color', clrs(end,:), 'linewidth', 2); 
-
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [0, 500, 1000])
-set(gca, 'Linewidth', axesThickness)
-xlabel('receptive field center distance', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel('correlation', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off; set(gca, 'TickDir', 'out')
-switch r
-    case 1
-      axis([0, 1030, -0.02, 0.42])
-    case 2
-      axis([0, 1030, -0.02, 0.42])
-end
-set(gca, 'Ytick', [0,0.2,0.4])
-hold off
-
-% subplot d) plot population size vs. avg. correlation
-switch r
-    case 1
-      load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_cb_lin_data.mat')
-    case 2
-      load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_fff_lin_data.mat')
-end
-
-  subplot(21,34,vec(bsxfun(@plus,  (21:26)', ((r-1)*10 + (1:9))*34)))
-tmp = zeros(length(idxN), 1);
-for i = 1:length(idxN)
-   tmp(i) = mean( vec(corrsSorted(idxN{i}, idxN{i})) );
-end
-plot(-10, -10, 'k', 'linewidth', 2); hold on; plot(-10,-10, ...
-     'color', clrs(ceil(3/4*size(clrs,1)),:), 'linewidth', 2);
-hold on
-plot(-10, -10, 'k', 'linewidth', 2); hold on; plot(-10,-10, ...
-     'color', 'k', 'linewidth', 2);
-plot(Ns, tmp, 'color', clrs(end,:), 'linewidth', 2), hold on
-
-% subplot e) plot c(T=1) vs. population size
-
-  subplot(21,34,vec(bsxfun(@plus,  (29:34)', ((r-1)*10 + (1:9))*34)))
-
-[~, idxT] = min(abs(Ts - 1));
-plot(Ns, squeeze(cN(:,:,idxT)), 'color', clrs(end,:), 'linewidth', 2)
-hold on
-
-switch r
-    case 1
-      load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_cb_rnd_data.mat')
-    case 2
-      load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig5/figS6_fff_rnd_data.mat')
-end
-subplot(21,34,vec(bsxfun(@plus,  (21:26)', ((r-1)*10 + (1:9))*34)))
-
-tmp = zeros(length(idxN), idxRep);
-for i = 1:length(idxN)
-  for t = 1:idxRep
-   tmp(i,t) = mean( vec(corrsSorted(idxN{i}(:,t), idxN{i}(:,t))) );
-  end
-end
-tmp = mean(tmp,2);
-%tmp = diff([0; tmp]);
-plot(Ns, tmp, 'k', 'linewidth', 2)
-set(gca, 'Linewidth', axesThickness)
-%legend('linear subsampling', 'random subsampling', ...
-%       'Orientation', 'horizontal')
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [0, 3000, 6000])
-set(gca, 'YTick', [0, 0.02, 0.04]) 
-xlabel('population size', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel('average correlation', 'FontName', fontName, ...
-      'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off; set(gca, 'TickDir', 'out')
-switch r
-    case 1
-      axis([0, 6020, 0, 0.023])
-      set(gca, 'Ytick', [0,0.01,0.02])
-    case 2
-      axis([0, 6020, 0, 0.205])
-      set(gca, 'Ytick', [0,0.1,0.2])
-end
-
-legend('random', 'spatial', 'location', 'North')
-hold off
-
-  subplot(21,34,vec(bsxfun(@plus,  (29:34)', ((r-1)*10 + (1:9))*34)))
-
-for t = 1:idxRep
- tmp = squeeze(cN(:,t,idxT))';
- plot(Ns, tmp, 'color', 'k', 'linewidth', 2), hold on
-end
-hold off
-set(gca, 'Linewidth', axesThickness)
-%legend('linear subsampling', 'random subsampling', ...
-%       'Orientation', 'horizontal')
-set(gca, 'FontSize', fontSize)
-set(gca, 'XTick', [0, 3000, 6000])
-xlabel('population size', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-ylabel('specific heat at T = 1', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off; set(gca, 'TickDir', 'out')
-set(gca, 'Ytick', [0,6,12,18])
-
-switch r
-    case 1
-      axis([0, 6020, 0, 2.3])
-      set(gca, 'Ytick', [0, 1, 2])
-    case 2
-      axis([0, 6020, 0, 170])
-      set(gca, 'Ytick', [0, 50, 100, 150])
-end
-hold off
-
-end
-
-clearvars -except figureS7 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
-
 

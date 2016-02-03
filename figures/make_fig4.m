@@ -295,7 +295,7 @@ set(gca, 'Linewidth', axesThickness)
 
 %% add real data information
 
-load('fig_data/fig5_data.mat') % output, idxC, pixel_size, cell_positions
+load('fig_data/fig4_data.mat') % output, idxC, pixel_size, cell_positions
   
 clrs = hsv(3);
 
