@@ -1,0 +1,25 @@
+This folder contains the core results for the study on 'correlations and criticality' by Nonnenmacher et al.
+
+To compute specific heat traces from the K-pairwise maximum entropy model for neuronal populations of different size n, 
+we completed a four-step procedure: 
+
+1. We randomly subsampled the full simulated RGC recording at n = 10, 20, ..., 300
+2. We generated feature moments E[f(x)] for spiking data x for 50 such random subpopulations at each population size n = 10,20,...,300.
+3. We fitted K-pairwise models to the feature moments for the *first* 10 random subpopulations at population size n = 20,40,...,120.
+4. We estimated specific heat traces at different temperatures from the 10 fitted K-pairwise models at population sizes n = 20,40,...,120
+
+The results of our computations are stored in 
+
+1. idxSubsamples.mat
+2. Efx_xyz.mat          | 'xyz' is 'nat' for natural stimuli
+3. lambda_xyz.mat       |          'cb' for checkerboard stimuli
+4. heat_traces_xyx.mat  |          'fff' for full-field flicker 
+
+Indexing is meant to be coherent between these files, i.e. 
+idxSubamples is       a 30x1 cell       (30 population sizes at 10 increment) of nx50 index matrices
+Efx_xyz gives         a 30x1 cell       (30 population sizes at 10 increment) of mx50 feature value matrices (m=n*(n+3)/2+1)
+lambda_xyz gives      a 12x1 cell       ( 6 population sizes at 20 increment) of mx10 fitted parameter value matrices
+heat_traces_xyz gives a 12x10x31 matrix ( 6 population sizes at 20 increment, 10 random subpopulations, 31 temperatures) 
+ 
+
+
