@@ -15,96 +15,117 @@ fontSizeXlabel = 1 * 10;   fontSizeYlabel = 1 * 11;
 fontSizeText   = 1 * 10;   fontSizeLegend = 1 * 11;
 
 %% supplementary figure 1: Advantage of Rao-Blackwellising 
+
+% The following code serves to compute the RMSEs from 
+% long MCMC sampler runs that stored all the intermediate estimated 
+% feature vectors f(X) after each sweep of samples. 
+% These files are large (>4GB) and hence not included in this github
+% repository. We provide them from the Mackelab dropbox account, instead, 
+% and for this code piece will load the pre-computed RMSEs directly.
+
+% timeRange = 1:65;     % select initial data segment for plotting, as the
+%                     % RMSEs of the MCMC estimates necessarily become
+%                     % the same towards the end (we're comparing against
+%                     % the average of the final estimates from boths 
+%                     % MCMC chains)
+% traces = cell(10,2,3);
+%  
+% for idxGroup = 1:3
+%   switch idxGroup
+%     case 1
+%       idxRange = 1:n;  
+%     case 2
+%       idxRange = (n+1) : ( n*(n+1)/2 ); % second moments / covariances        
+%     case 3
+%       idxRange = n*(n+3)/2+1 + (-n:0);  
+%   end
+%                          
+%   finals = zeros( n * (n+3) / 2 +1, 10, 2);
+%   MSEperc = zeros(10,3);
+% 
+%  for idxRepet = 1:10
+%   tmp = cell(2,1);
+%   for r = 1:2
+%    switch r
+%     case 1
+%       load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_RB100idxRepet', ...
+%              num2str(idxRepet), 'T1.mat'])
+%     case 2
+%       load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_noRB100idxRepet', ...
+%              num2str(idxRepet), 'T1.mat'])
+%    end
+%    tmp{r} = Efy(:,2:end-1);
+%   
+%    fDescrJ = nchoosek(1:n,2)'; 
+%    covsy = tmp{r}((n+1):(n*(n+1)/2),:) - ...    % covariance as computed
+%           (tmp{r}(fDescrJ(1, :),:).* tmp{r}(fDescrJ(2, :),:)); % from Efx
+%    % now gives [firing rates; covariances; P(K)] over time 
+%    tmp{r}(n+(1:n*(n-1)/2),:) = covsy;  
+%    % moving average over time (i.e. tmp(:,t) holds MCMC estimate at time t)
+%    tmp{r} = bsxfun(@rdivide, cumsum(tmp{r},2), (1:size(tmp{r},2))); 
+%    % chain ends (for comparison with 'truth')
+%    finals(:, idxRepet, r) = tmp{r}(:,end);  
+%   end
+%   MSEperc(idxRepet,1) = mean( (finals(1:n, idxRepet, 1) ...
+%                              - finals(1:n, idxRepet, 2)).^2  ) / ...
+%                  mean( mean(finals(1:n, idxRepet, 1).^2) ...
+%                      + mean(finals(1:n, idxRepet, 2).^2));
+%   MSEperc(idxRepet,2) = mean( (finals(n+(1:n*(n-1)/2),idxRepet,1) ...
+%                              - finals(n+(1:n*(n-1)/2),idxRepet,2)).^2)/ ...
+%                  mean( mean(finals(n+(1:n*(n-1)/2), idxRepet, 1).^2) ...
+%                      + mean(finals(n+(1:n*(n-1)/2), idxRepet, 2).^2));
+%   MSEperc(idxRepet,3) = mean( (finals(end-n:end, idxRepet, 1) ...
+%                             - finals(end-n:end, idxRepet, 2)).^2  ) / ...
+%                  mean( mean(finals(end-n:end, idxRepet, 1).^2) ...
+%                      + mean(finals(end-n:end, idxRepet, 2).^2));
+%   for r = 1:2
+%    % compare to average of both estimates   
+%    tmp{r} = bsxfun(@minus, tmp{r}(:,:), mean(finals(:, idxRepet, :),3)).^2; 
+%    % compute average squared distance over all variables of interest
+%    traces{idxRepet, r, idxGroup} = (mean(tmp{r}(idxRange,:),1)' ...
+%                        ./ mean(mean(finals(idxRange,idxRepet,:),3).^2)); 
+%   end 
+%   clear tmp
+%  end
+% end
+
 figureS1 = figure('Tag', 'figS5', 'units','centimeters','position',...
                   [0,0,19,11]);
+
+              
+load('fig_data/figS2_data.mat')
 
 clrs = copper(20);
 clrs = clrs(end:-1:1,:);
 
 n = 100; % example population size chosen for the paper. 
 
-
+timeRange = 1:65;     % select initial data segment for plotting, as the
+                    % MSEs of the MCMC estimates necessarily become
+                    % the same towards the end (we're comparing against
+                    % the average of the final estimates from boths 
+                    % MCMC chains)
+                    
+avgtraces = cell(2,3);
 for idxGroup = 1:3
-  switch idxGroup
-    case 1
-      idxRange = 1:n;  
-    case 2
-      idxRange = (n+1) : ( n*(n+1)/2 ); % second moments / covariances        
-    case 3
-      idxRange = n*(n+3)/2+1 + (-n:0);  
-  end
-  timeRange = 1:65;     % select initial data segment for plotting, as the
-                        % MSEs of the MCMC estimates necessarily become
-                        % the same towards the end (we're comparing against
-                        % the average of the final estimates from boths 
-                        % MCMC chains)
-  traces = cell(10, 2);                         
-  finals = zeros( n * (n+3) / 2 +1, 10, 2);
-  MSEperc = zeros(10,3);
-
- for idxRepet = 1:10
-  tmp = cell(2,1);
-  for r = 1:2
-   switch r
-    case 1
-      load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_RB100idxRepet', ...
-             num2str(idxRepet), 'T1.mat'])
-    case 2
-      load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_noRB100idxRepet', ...
-             num2str(idxRepet), 'T1.mat'])
-   end
-   tmp{r} = Efy(:,2:end-1);
-  
-   fDescrJ = nchoosek(1:n,2)'; 
-   covsy = tmp{r}((n+1):(n*(n+1)/2),:) - ...    % covariance as computed
-          (tmp{r}(fDescrJ(1, :),:).* tmp{r}(fDescrJ(2, :),:)); % from Efx
-   % now gives [firing rates; covariances; P(K)] over time 
-   tmp{r}(n+(1:n*(n-1)/2),:) = covsy;  
-   % moving average over time (i.e. tmp(:,t) holds MCMC estimate at time t)
-   tmp{r} = bsxfun(@rdivide, cumsum(tmp{r},2), (1:size(tmp{r},2))); 
-   % chain ends (for comparison with 'truth')
-   finals(:, idxRepet, r) = tmp{r}(:,end);  
-  end
-  MSEperc(idxRepet,1) = mean( (finals(1:n, idxRepet, 1) ...
-                             - finals(1:n, idxRepet, 2)).^2  ) / ...
-                 mean( mean(finals(1:n, idxRepet, 1).^2) ...
-                     + mean(finals(1:n, idxRepet, 2).^2));
-  MSEperc(idxRepet,2) = mean( (finals(n+(1:n*(n-1)/2),idxRepet,1) ...
-                             - finals(n+(1:n*(n-1)/2),idxRepet,2)).^2)/ ...
-                 mean( mean(finals(n+(1:n*(n-1)/2), idxRepet, 1).^2) ...
-                     + mean(finals(n+(1:n*(n-1)/2), idxRepet, 2).^2));
-  MSEperc(idxRepet,3) = mean( (finals(end-n:end, idxRepet, 1) ...
-                            - finals(end-n:end, idxRepet, 2)).^2  ) / ...
-                 mean( mean(finals(end-n:end, idxRepet, 1).^2) ...
-                     + mean(finals(end-n:end, idxRepet, 2).^2));
-  for r = 1:2
-   % compare to average of both estimates   
-   tmp{r} = bsxfun(@minus, tmp{r}(:,:), mean(finals(:, idxRepet, :),3)).^2; 
-   % compute average squared distance over all variables of interest
-   traces{idxRepet, r} = (mean(tmp{r}(idxRange,:),1)' ...
-                       ./ mean(mean(finals(idxRange,idxRepet,:),3).^2)); 
-  end 
-  clear tmp
- end
-
- avgtraces = cell(2,1);
  subplot(3,2,2*(idxGroup-1)+1)
  for r = 1:2
    for idxRepet = 1:10
-    plot(100 * traces{idxRepet,r}(timeRange), ...
+    plot(100 * traces{idxRepet,r,idxGroup}(timeRange), ...
          'color', clrs(5*r,:), 'linewidth', 1.5);    
     hold on
    end
    
    m = Inf;
    for idxRepet = 1:10
-       m = min([m, length(traces{idxRepet,r})]);
+       m = min([m, length(traces{idxRepet,r,idxGroup})]);
    end
-   avgtraces{r} = zeros(m,1);
+   avgtraces{r,idxGroup} = zeros(m,1);
    for idxRepet = 1:10
-     avgtraces{r} = avgtraces{r} + traces{idxRepet,r}(1:m);
+     avgtraces{r,idxGroup} = avgtraces{r,idxGroup} + ...
+                                     traces{idxRepet,r,idxGroup}(1:m);
    end 
-   avgtraces{r} = avgtraces{r} / idxRepet;
+   avgtraces{r,idxGroup} = avgtraces{r,idxGroup} / idxRepet;
  end
  for i = 1:5
   line([8, 8]*2^(i-1),[0, 1000],'linestyle','--','color',(i-1)/10*[1,1,1])
@@ -131,15 +152,19 @@ for idxGroup = 1:3
  set(gca, 'FontSize', fontSize)
 
  idxShow = unique(round(exp(-2:0.1:10)))+1; 
- idxShow = idxShow(idxShow<=length(avgtraces{1}));
+ idxShow = idxShow(idxShow<=length(avgtraces{1,idxGroup}));
 
  subplot(3,2,2*(idxGroup-1)+2)
- loglog(idxShow, 100 * avgtraces{1}(idxShow), 'color', clrs(5,:), 'linewidth',  2.5)
+ loglog(idxShow, 100 * avgtraces{1,idxGroup}(idxShow), ...
+     'color', clrs(5,:), 'linewidth',  2.5)
  hold on
- loglog(idxShow, 100 * avgtraces{2}(idxShow), 'color', clrs(10,:), 'linewidth', 2.5)
- loglog(idxShow, 100 * avgtraces{1}(idxShow), 'color', clrs(5,:), 'linewidth',  2.5)
+ loglog(idxShow, 100 * avgtraces{2,idxGroup}(idxShow), ...
+ 'color', clrs(10,:), 'linewidth', 2.5)
+ loglog(idxShow, 100 * avgtraces{1,idxGroup}(idxShow), ...
+     'color', clrs(5,:), 'linewidth',  2.5)
  hold on
- loglog(idxShow, 100 * avgtraces{2}(idxShow), 'color', clrs(10,:), 'linewidth', 2.5)
+ loglog(idxShow, 100 * avgtraces{2,idxGroup}(idxShow), ...
+     'color', clrs(10,:), 'linewidth', 2.5)
  
  hold off
  switch idxGroup
@@ -178,69 +203,14 @@ figure42 = figure('Tag', 'fig42', 'units','centimeters','position',...
 clrs = copper(20);
 clrs = clrs(end:-1:1,:);
 
+load('fig_data/figS2_data.mat')
+
 n = 100; % example population size chosen for the paper. 
 
 idxRepets = 1:10;
+timeRange = 1:65;                % first 15.000 sweeps
 
 for idxGroup = 2
-%  subplot(1,3,idxGroup)
-  switch idxGroup
-    case 1
-      idxRange = 1:n;  
-    case 2
-      idxRange = (n+1) : ( n*(n+1)/2 ); % second moments / covariances        
-    case 3
-      idxRange = n*(n+3)/2+1 + (-n:0);  
-  end
-  timeRange = 1:65;                % first 15.000 sweeps
-  traces = cell(10, 2);
-  finals = zeros( n * (n+3) / 2 +1, 10, 2);
-  MSEperc = zeros(10,3);
-
- for idxRepet = idxRepets
-  tmp = cell(2,1);
-  for r = 1:2
-   switch r
-    case 1
-     load(['../results/method_validation/feature_moments_test_rao_blackwell/', ...
-           'checkRB_RB100idxRepet', num2str(idxRepet), 'T1.mat'])
-    case 2
-     load(['../results/method_validation/feature_moments_test_rao_blackwell/', ...
-           'checkRB_noRB100idxRepet', num2str(idxRepet), 'T1.mat'])
-   end
-   tmp{r} = Efy(:,2:end-1);
-  
-   fDescrJ = nchoosek(1:n,2)'; 
-   covsy = tmp{r}((n+1):(n*(n+1)/2),:) - ...  % covariance as computed
-          (tmp{r}(fDescrJ(1, :),:) ...        % from Efx    
-        .* tmp{r}(fDescrJ(2, :),:)); 
-   % now gives [firing rates; covariances; P(K)] over time 
-   tmp{r}(n+(1:n*(n-1)/2),:) = covsy;  
-   % moving average over time (i.e. tmp(:,t) holds MCMC estimate at time t)
-   tmp{r} = bsxfun(@rdivide, cumsum(tmp{r},2), (1:size(tmp{r},2))); 
-   % chain ends (for comparison with 'truth')
-   finals(:, idxRepet, r) = tmp{r}(:,end);  
-  end
-  MSEperc(idxRepet,1) = mean( (finals(1:n, idxRepet, 1) ...
-                             - finals(1:n, idxRepet, 2)).^2  ) / ...
-                 mean( mean(finals(1:n, idxRepet, 1).^2) ...
-                     + mean(finals(1:n, idxRepet, 2).^2));
-  MSEperc(idxRepet,2) = mean( (finals(n+(1:n*(n-1)/2),idxRepet,1) ...
-                             - finals(n+(1:n*(n-1)/2),idxRepet,2)).^2)/ ...
-                 mean( mean(finals(n+(1:n*(n-1)/2), idxRepet, 1).^2) ...
-                     + mean(finals(n+(1:n*(n-1)/2), idxRepet, 2).^2));
-  MSEperc(idxRepet,3) = mean( (finals(end-n:end, idxRepet, 1) ...
-                             - finals(end-n:end, idxRepet, 2)).^2  ) / ...
-                 mean( mean(finals(end-n:end, idxRepet, 1).^2) ...
-                     + mean(finals(end-n:end, idxRepet, 2).^2));
-  for r = 1:2
-   % compare to average of both estimates   
-   tmp{r} = bsxfun(@minus, tmp{r}(:,:), mean(finals(:, idxRepet, :),3)).^2; 
-   % compute average squared distance over all variables of interest
-   traces{idxRepet, r} = (mean(tmp{r}(idxRange,:),1)' ...
-                         ./ mean(mean(finals(idxRange,idxRepet,:),3).^2)); 
-  end 
- end
 
  % compute averages over all 10 runs each for RB and no RB condition
  avgtraces = cell(2,1);
@@ -248,15 +218,15 @@ for idxGroup = 2
  for r = 1:2
    m = Inf;
    for idxRepet = 1
-       m = min([m, length(traces{idxRepet,r})]);
+       m = min([m, length(traces{idxRepet,r,idxGroup})]);
    end
    avgtraces{r} = zeros(m,1);
    stdtraces{r} = zeros(m,length(idxRepets));
    for idxRepet = idxRepets
-     avgtraces{r} = avgtraces{r} + traces{idxRepet,r}(1:m);        % MSE
-     stdtraces{r}(:,idxRepet) = traces{idxRepet,r}(1:m);           % MSE
-%     avgtraces{r} = avgtraces{r} + sqrt(traces{idxRepet,r}(1:m)); % RMSE
-%     stdtraces{r}(:,idxRepet) = sqrt(traces{idxRepet,r}(1:m));    % RMSE
+     avgtraces{r} = avgtraces{r} + traces{idxRepet,r,idxGroup}(1:m);  
+     stdtraces{r}(:,idxRepet) = traces{idxRepet,r,idxGroup}(1:m);           
+%     avgtraces{r} = avgtraces{r} + sqrt(traces{idxRepet,r}(1:m)); 
+%     stdtraces{r}(:,idxRepet) = sqrt(traces{idxRepet,r}(1:m));    
    end 
    avgtraces{r} = avgtraces{r} / idxRepet;
    stdtraces{r} = std(stdtraces{r},0,2);
