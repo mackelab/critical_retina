@@ -730,8 +730,7 @@ for i = 1:31
     disp(str)
     str(str=='.') = '_';
     
-%    load(['../results/method_validation/specific_heat_samples_long_runs/','longRun100idxRepet1T',str,'.mat']) 
-    load(['/home/mackelab/Desktop/Projects/Criticality/results/VarE_long_runs/longRun100idxRepet1T',str,'.mat'])
+    load(['../results/method_validation/specific_heat_samples_long_runs/','longRun100idxRepet1T',str,'.mat']) 
     
     subplot(1,3,1)
     plot(Temps(i),mean(50*Efy(1:n)),'.','color',clrs(i,:),'markerSize',10)
@@ -796,51 +795,4 @@ end
 
 clearvars -except figureS9 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
-%% c(T) traces for large simulation, up to n = 6000, uniform vs. spatial subsampling
-
-figureS3 = figure('Tag', 'figS3', 'units','centimeters','position',[0,0,19,11]);
-lgnd = cell(30,1);
-clrs = copper(30);
-clrs = clrs(end:-1:1,:);
-
-clear Ts Ns cN
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig4/fig4rnd_data.mat')
-cNrnd = cN; clear cN;
-load('/home/mackelab/Desktop/Projects/Criticality/code_critical_retina/Figures/Fig4/fig4lin_data.mat')
-cNlin = cN; clear cN;
-
-offset = 0.2;
-tempRange = 51:190;
-for i = 30:-1:1, 
-    plot(Ts(tempRange), mean(squeeze(cNrnd(10*i,:,tempRange)),1), ...
-         'color', clrs(i,:), 'linewidth', 1), hold on; 
-    lgnd{31-i} = ['n = ', num2str(Ns(10*i))];
-end
-for i = 30:-1:1, 
-    plot(Ts(tempRange)+offset, squeeze(cNlin(10*i,:,tempRange)), ...
-         'color', clrs(i,:), 'linewidth', 1), hold on; 
-end
-for i = 30:-1:1,
-    [maxCrnd, idxTmaxCrnd] = max( mean(squeeze(cNrnd(10*i,:,:)),1) );
-    [maxClin, idxTmaxClin] = max( squeeze(cNlin(10*i,:,:)) );
-end
-legend(lgnd); 
-line([1,1], [0, 1.05*max(cNlin(:))], 'linestyle', '--', 'color', 'k', ...
-     'linewidth', axesThickness)
-line([1,1]+offset, [0, 1.05*max(cNlin(:))], 'linestyle', '--', ...
-     'color', 'k', 'linewidth', axesThickness)
-set(gca, 'Linewidth', axesThickness)
-axis([min(Ts),max(Ts),0.95*min(cNlin(:)), 1.05*max(cNlin(:))]); %axis autoy
-set(gca, 'XTick', [1, 1.1, 1.2, 1.3]);
-set(gca, 'XTickLabel', [1, 1.1, 1, 1.1]);
-set(gca, 'YTick', [10,20,30])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-legend(lgnd, 'orientation', 'vertical'); %legend boxoff
-xlabel('temperature'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('specific heat', 'FontName', fontName, ...
-       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-
-clearvars -except figureS3 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
