@@ -28,6 +28,7 @@ xDist = linspace(0,1,101);
 Ts = (0.8 : 0.00125 : 2)'; % temperature range for specific heat curves
 [~,idxT] = min(abs(Ts-1));
 
+rng('default')
 
 axesThickness  = 1.1; % overall thickness of axes. Doesn't seem to do much.
 fontName = 'Arial';    fontWeight     = 'normal';
@@ -37,35 +38,40 @@ fontSizeText   = 1 * 10;   fontSizeLegend = 1 * 11;
 cmin = Inf; cmax = -Inf;
 %% flat data case
 
+ 
 % compute data for flat data case:
 rho = 0.05;
-% compute data for realistic data case:
-Sigma = rho * ones(N,N);                  % set Sigma to desired values
-Sigma(logical(diag(ones(N,1)))) = 1;      %
 mu = 0.05*ones(N,1);
-Cov = zeros(size(Sigma));                 % compute covariance matrix
-idxRnd = randperm(N);
-for i = 1:N
-    for j = i:N
-        Cov(i,j) = Sigma(idxRnd(i),idxRnd(j)) * (mu(1) * (1-mu(1)));
-    end
-end
-Cov = Cov + Cov' - diag(diag(Cov));
-X = sampleDichGauss01(mu,Cov,numSamples/100)'; % draw small sample
-Sigma  = corrcoef(X');           % re-set Sigma to noisy empirical values
-                                      
-Cov = zeros(size(Sigma));                % re-compute covariance matrix
-idxRnd = randperm(N); 
-for i = 1:N
-    for j = i:N
-        Cov(i,j) = Sigma(idxRnd(i),idxRnd(j)) * (mu(1) * (1-mu(1)));
-    end
-end
-Cov = Cov + Cov' - diag(diag(Cov));
-X = sampleDichGauss01(mu,Cov,numSamples)'; % draw large sample
-SigmaD = corrcoef(X');% 'empirical' correlation matrix
-disp(['avg corr in flat data case is ', ...
-    num2str(mean(SigmaD(~logical(diag(ones(N,1))))))])
+ 
+% % compute data for realistic data case:
+% Sigma = rho * ones(N,N);                  % set Sigma to desired values
+% Sigma(logical(diag(ones(N,1)))) = 1;      %
+% Cov = zeros(size(Sigma));                 % compute covariance matrix
+% idxRnd = randperm(N);
+% for i = 1:N
+%     for j = i:N
+%         Cov(i,j) = Sigma(idxRnd(i),idxRnd(j)) * (mu(1) * (1-mu(1)));
+%     end
+% end
+% Cov = Cov + Cov' - diag(diag(Cov));
+% X = sampleDichGauss01(mu,Cov,numSamples/100)'; % draw small sample
+% Sigma  = corrcoef(X');           % re-set Sigma to noisy empirical values
+%                                       
+% Cov = zeros(size(Sigma));                % re-compute covariance matrix
+% idxRnd = randperm(N); 
+% for i = 1:N
+%     for j = i:N
+%         Cov(i,j) = Sigma(idxRnd(i),idxRnd(j)) * (mu(1) * (1-mu(1)));
+%     end
+% end
+% Cov = Cov + Cov' - diag(diag(Cov));
+% X = sampleDichGauss01(mu,Cov,numSamples)'; % draw large sample
+% SigmaD = corrcoef(X');% 'empirical' correlation matrix
+% disp(['avg corr in flat data case is ', ...
+%     num2str(mean(SigmaD(~logical(diag(ones(N,1))))))])
+
+% The above code runs a while, hence we precomputed and saved the results:
+load('fig_data/fig4_flat_case')
 cmin = min([cmin, min(SigmaD(~logical(diag(ones(N,1)))))]);
 cmax = max([cmax, max(SigmaD(~logical(diag(ones(N,1)))))]);
 
@@ -133,29 +139,29 @@ box off
 set(gca, 'TickDir', 'out')
 set(gca, 'Linewidth', axesThickness)
 % d) 
- cT1r = zeros(length(ns), idxRep);
- cTMr = zeros(length(ns), idxRep);
- cT1l = zeros(length(ns), idxRep);
- cTMl = zeros(length(ns), idxRep);
- for n = 1:length(ns)
-     for i = 1:idxRep
-         pcount = sum(X(idxNr{n}(:,i),:))';
-         pcount = histc(pcount, 0:ns(n));
-         pcount = pcount/sum(pcount);
-         [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
- %        end
-         cT1r(n,i) = cN(idxT);
-         cTMr(n,i) = max(cN);
-         pcount = sum(X(idxNl{n}(:,i),:))';
-         pcount = histc(pcount, 0:ns(n));
-         pcount = pcount/sum(pcount);
-         [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
- %        end
-         cT1l(n,i) = cN(idxT);
-         cTMl(n,i) = max(cN);
-     end
- end
+% These are currently pre-loaded:
+%  cT1r = zeros(length(ns), idxRep);
+%  cTMr = zeros(length(ns), idxRep);
+%  cT1l = zeros(length(ns), idxRep);
+%  cTMl = zeros(length(ns), idxRep);
+%  for n = 1:length(ns)
+%      for i = 1:idxRep
+%          pcount = sum(X(idxNr{n}(:,i),:))';
+%          pcount = histc(pcount, 0:ns(n));
+%          pcount = pcount/sum(pcount);
+%          [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
+%          cT1r(n,i) = cN(idxT);
+%          cTMr(n,i) = max(cN);
+%          pcount = sum(X(idxNl{n}(:,i),:))';
+%          pcount = histc(pcount, 0:ns(n));
+%          pcount = pcount/sum(pcount);
+%          [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
+%          cT1l(n,i) = cN(idxT);
+%          cTMl(n,i) = max(cN);
+%      end
+%  end
 % e) (inset!)
+
 subplot(3,4,4)
 plot(ns, mean(cT1r,2), 'color', 0.4*[1,1,1], 'linewidth', 2)
 hold on
@@ -171,28 +177,31 @@ set(gca, 'TickDir', 'out')
 set(gca, 'Linewidth', axesThickness)
 
 %% spatial drop-off data case
-clear X
-% as this is just an illustration, we try to match the average corelation 
-% as closely as possible - by hand. 
-sigma2 = 1/8;    % given above numSamples, 
-scale  = 0.2527; % works out empirically to give rho = 0.05 
-f = @(x) scale * exp(-(1/sigma2* x).^2);
-% compute data for realistic data case:
-Sigma = f(ones(N,1)*(1:N)/N - (ones(N,1)/N*(1:N))');
-Sigma(logical(diag(ones(N,1)))) = 1;
-Cov = zeros(size(Sigma));
-for i = 1:N
-    for j = i:N
-        Cov(i,j) = Sigma(i,j) * (mu(1) * (1-mu(1)));
-    end
-end
-Cov = Cov + Cov' - diag(diag(Cov));
-X = sampleDichGauss01(mu,Cov,numSamples)';
-SigmaD = corrcoef(X');% 'empirical' correlation matrix
-cmin = min([cmin, min(SigmaD(~logical(diag(ones(N,1)))))]);
-cmax = max([cmax, max(SigmaD(~logical(diag(ones(N,1)))))]);
-disp(['avg corr in realistic data case is ', ...
-    num2str(mean(SigmaD(~logical(diag(ones(N,1))))))])
+% clear X
+% % as this is just an illustration, we try to match the average corelation 
+% % as closely as possible - by hand. 
+ sigma2 = 1/8;    % given above numSamples, 
+ scale  = 0.2527; % works out empirically to give rho = 0.05 
+ f = @(x) scale * exp(-(1/sigma2* x).^2);
+% % compute data for realistic data case:
+% Sigma = f(ones(N,1)*(1:N)/N - (ones(N,1)/N*(1:N))');
+% Sigma(logical(diag(ones(N,1)))) = 1;
+% Cov = zeros(size(Sigma));
+% for i = 1:N
+%     for j = i:N
+%         Cov(i,j) = Sigma(i,j) * (mu(1) * (1-mu(1)));
+%     end
+% end
+% Cov = Cov + Cov' - diag(diag(Cov));
+% X = sampleDichGauss01(mu,Cov,numSamples)';
+% SigmaD = corrcoef(X');% 'empirical' correlation matrix
+% cmin = min([cmin, min(SigmaD(~logical(diag(ones(N,1)))))]);
+% cmax = max([cmax, max(SigmaD(~logical(diag(ones(N,1)))))]);
+% disp(['avg corr in realistic data case is ', ...
+%     num2str(mean(SigmaD(~logical(diag(ones(N,1))))))])
+
+% The above code runs a while, hence we precomputed and saved the results:
+load('fig_data/fig4_dropoff_case')
 
 %%
 % a)
@@ -258,26 +267,27 @@ box off
 set(gca, 'TickDir', 'out')
 set(gca, 'Linewidth', axesThickness)
 % d) 
- cT1r = zeros(length(ns), idxRep);
- cTMr = zeros(length(ns), idxRep);
- cT1l = zeros(length(ns), idxRep);
- cTMl = zeros(length(ns), idxRep);
- for n = 1:length(ns)
-     for i = 1:idxRep
-         pcount = sum(X(idxNr{n}(:,i),:))';
-         pcount = histc(pcount, 0:ns(n));
-         pcount = pcount/sum(pcount);
-         [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
-         cT1r(n,i) = cN(idxT);
-         cTMr(n,i) = max(cN);
-         pcount = sum(X(idxNl{n}(:,i),:))';
-         pcount = histc(pcount, 0:ns(n));
-         pcount = pcount/sum(pcount);
-         [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
-         cT1l(n,i) = cN(idxT);
-         cTMl(n,i) = max(cN);
-     end
- end
+% These are currently pre-loaded:
+%  cT1r = zeros(length(ns), idxRep);
+%  cTMr = zeros(length(ns), idxRep);
+%  cT1l = zeros(length(ns), idxRep);
+%  cTMl = zeros(length(ns), idxRep);
+%  for n = 1:length(ns)
+%      for i = 1:idxRep
+%          pcount = sum(X(idxNr{n}(:,i),:))';
+%          pcount = histc(pcount, 0:ns(n));
+%          pcount = pcount/sum(pcount);
+%          [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
+%          cT1r(n,i) = cN(idxT);
+%          cTMr(n,i) = max(cN);
+%          pcount = sum(X(idxNl{n}(:,i),:))';
+%          pcount = histc(pcount, 0:ns(n));
+%          pcount = pcount/sum(pcount);
+%          [cN, ~] = computeSpecificHeatTraces(pcount, Ts, 1);
+%          cT1l(n,i) = cN(idxT);
+%          cTMl(n,i) = max(cN);
+%      end
+%  end
 % e) (inset!)
 subplot(3,4,8)
 plot(ns, mean(cT1r,2), 'color', 0.4*[1,1,1], 'linewidth', 2)
