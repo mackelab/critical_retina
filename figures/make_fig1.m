@@ -269,8 +269,8 @@ hold on
 for idxRepet = idxRepets 
  for i = 1:31,
   tmp = num2str(Ts(i)); tmp(tmp=='.')='_';    
-  load(['../results/method_validation/specific_heat_samples/VarEsn',...
-  num2str(n), 'idxRepet', num2str(idxRepet), 'T', tmp, '.mat']) 
+  %load(['../results/method_validation/specific_heat_samples/VarEsn',...
+  %num2str(n), 'idxRepet', num2str(idxRepet), 'T', tmp, '.mat']) 
   [~, idxClr] = min(abs( 100*Ts(i) - range));
   plot(Ts(i), c(i,idxRepet), 's', 'color', clrs(idxClr,:), ...
       'linewidth', 1.5, 'markerSize', 1.5)
@@ -300,6 +300,11 @@ clrs = [254,153,41;
 153,52,4;
 102,37,6;
 0,0,0]/255;
+
+Ts = [0.8000,0.8563,0.9000,0.9363,0.9675,0.9938,1.0175,1.0388,1.0575, ...
+    1.0775,1.0988,1.1200,1.1413,1.1650,1.1900,1.2150,1.2425,1.2713, ...
+    1.3013,1.3338,1.3687,1.4063,1.4463,1.4900,1.5375,1.5900,1.6500, ...
+    1.7175,1.7950,1.8875,2.0000];
 
 c = cN(2:2:end,:,:);
 
