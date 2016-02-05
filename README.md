@@ -7,8 +7,10 @@ used	in	the	research project
 
 For reasons	 of	 transparency,	 this	 repository	 is	 a	 direct	 copy	 of	 the	code used	internally within the	project,	complete	with	the	full	and	raw	submission	history of	all	commits.	Given	that,	the	code	(found in the "code" folder) uses	absolute	pathnames	and	is included	as	it	was	run	on	our	workstation	and	on	our	compute-cluster,	it	is	likely	that	it	will	not	work	‘out	of	the	box’.
 
-We	 have	 additionally	 uploaded	 the	 simulated	 data,	 source	 files	 with	 any	 data	that	went	into	any	figure	as	well	as	scripts	for	generating	raw	versions	of	all	figures. The only exception to this are the long Markov Chain Monte Carlo runs that were used to gauge the gain in sampling effeciency obtained from Rao-Blackwellizing the Monte Carlo sampler. This repository only contains data on the quantified gain. The raw files for this data (~ 4.2 GB) can be found on our lab dropbox at https://www.dropbox.com/work/team/Datasets/critical_retina/feature_moments_test_rao_blackwell
+We	 have	 additionally	 uploaded	 the	 simulated	 data,	 source	 files	 with	 any	 data	that	went	into	any	figure	as	well	as	scripts	for	generating	raw	versions	of	all	figures. The only exception to this are the long Markov Chain Monte Carlo runs that were used to gauge the gain in sampling effeciency obtained from Rao-Blackwellizing the Monte Carlo sampler. This repository only contains data on the quantified gain (i.e. the root mean square errors (RMSEs) referred to in the manuscript). The raw files for this data (~ 4.2 GB) can be found on our lab dropbox at https://www.dropbox.com/work/team/Datasets/critical_retina/feature_moments_test_rao_blackwell
 We are happy to share the link.
+
+This repository also contains the code used to generate the activity of our simple simulated population of retinal ganglion cells, found under "data/data_generation/". This code can be readily used to generate additional simulated activity. 
 
 The figure scripts were updated to work with the file structure and should run out of the box when exectued from within the "figures" folder. 
 
