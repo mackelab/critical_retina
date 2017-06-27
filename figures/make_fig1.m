@@ -1,5 +1,6 @@
-%% produces fig 1 for the journal version of 'criticality and correlations' 
-% figure '1' is the overview figure summarising our simulation and how
+%% produces first obsolete version fig 1 for the journal version of 
+% 'criticality and correlations' 
+% figure '1' was the overview figure summarising our simulation and how
 % we find signatures of 'criticality' in this data
 
 clear all
