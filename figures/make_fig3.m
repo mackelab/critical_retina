@@ -1,19 +1,20 @@
-%% produces figure three for the journal version of our 'criticality and correlations' project
-% figure '3' is the figure summarising dependence of specific heat in flat
-% models on the average correlation strength within the data, and how
-% we can also see this for the K-pairwise model when varying stimuli.
+%% produces fig 1 for the journal version of 'criticality and correlations' 
+% figure '2' is the overview figure summarising flat models, how we fit 
+% them to data and that we still obtain signatures of 'criticality' when
+% applying them to our data
 
 clear all
+
+ifAddGaussianFits = false;
 
 splitFigs = false;
 
 if ~splitFigs
-  figure3 = figure('Tag', 'fig3', 'units','normalized','position',[0,0,0.99,0.99]);
+  figure2 = figure('Tag', 'fig2', 'units','normalized', ...
+                   'position',[0,0,0.99,0.99]);
 end
 
 addpath(genpath('../code/'))
-
-clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;
 
 axesThickness  = 1.1; % overall thickness of axes. Doesn't seem to do much.
 
@@ -22,223 +23,28 @@ fontSize       = 1 * 10;   fontSizeTitle  = 1 * 16;
 fontSizeXlabel = 1 * 10;   fontSizeYlabel = 1 * 11;
 fontSizeText   = 1 * 10;   fontSizeLegend = 1 * 11;
 
-% subplot a) Heat traces for various correlation strengths rho
-greyLevel = 0.8;
+load('../data/RGC_sim_nat.mat')        % loads raw simulated RGC data
 
-load('fig_data/fig3_data.mat')
-idxSP = {vec(bsxfun(@plus,  (0:1)', (0:7)*34)), ...
-         vec(bsxfun(@plus,  (1:6)', (0:7)*34)), ...
-         vec(bsxfun(@plus,  (8:13)', (0:7)*34)), ...
-         vec(bsxfun(@plus,  (15:20)', (0:7)*34)), ...
-         vec(bsxfun(@plus,  (22:27)', (0:7)*34)), ...
-         vec(bsxfun(@plus,  (29:34)', (0:7)*34))};
-idxTick = {[0, 0.5, 1, 1.5], [0,1,2], [0,2,4], [0,3,6,9], ...
-           [0,5,10,15], [0,5,15,25]}; 
-
- [~, idxT] = min(abs(output{1}.Ts-1));
-
-limitRate = zeros(length(idxSP),1); %
- % compute estimate of divergence rate 
-dcN = zeros(length(idxSP),length(output{1}.Ns));    
-
-for i = 2:length(idxSP)
-if splitFigs
-  figure(30+i)
-else
-  subplot(21,34,idxSP{i})
-end    
-
-
- for j = find(output{i}.Ns<=320, 1, 'last'):-1:1   
-  plot(output{i}.Ts, output{i}.cN(j,:), 'color', clrs(j,:), ...
-      'linewidth', 1.5, 'markerSize', 1.5); hold on
-  lgnd{find(output{i}.Ns<=320, 1, 'last')-j+1} = ['n = ', ...
-      num2str(output{i}.Ns(j))];
-  axis([min(output{i}.Ts),max(output{i}.Ts), 0, ...
-      1.05*max(vec(output{i}.cN(1:find(output{i}.Ns<=320, 1, 'last'),:)))])
-
+ n = size(output,3);         % get input spike raster format
+ Nc = size(output,1);        % n = number of cells, Nc = trial length
+ nTrials = size(output,2);   % nTrials = number of trials
+ output = double(output);      % pyhton code produces data of type int64
+ tmp = zeros(n, Nc, nTrials);
+ for i = 1:nTrials
+   tmp(:, :, i) = squeeze(output(:,i,:))';
  end
-  line([1,1], [0, 1.05*max(output{i}.cN(:))],'lineStyle', '--', ...
-      'color', 'k', 'linewidth', axesThickness)
- 
-  box off
-  set(gca, 'TickDir', 'out')
-  set(gca, 'FontSize', fontSize)
-  xlabel('temperature', 'FontName', fontName, ...
-      'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-  set(gca, 'XTick', [1, 1.5, 2])
-  if i == 2
-   ylabel('specific heat', 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-  end
-  set(gca, 'YTick', idxTick{i})
-  text(1.3, 0.9*max(vec(output{i}.cN(1:find(output{i}.Ns<=320,1, ...
-      'last'),:))), ['\rho = ', num2str(output{i}.rho)], ...
-      'FontName', fontName, 'FontSize', fontSizeXlabel, ...
-      'FontWeight', fontWeight )
-  set(gca, 'Linewidth', axesThickness)
- 
-  dcN(i,:) =  output{i}.cN(:,idxT)./output{i}.Ns';
-  limitRate(i) = ( output{i}.a*(output{i}.a+1)*psi(1,output{i}.a+1) + ...
-                  output{i}.b*(output{i}.b+1)*psi(1,output{i}.b+1) )/ ...
-                ((output{i}.a+output{i}.b)*(output{i}.a+output{i}.b+1))...
-                - psi(1,output{i}.a+output{i}.b+1) ...
-                + output{i}.a*output{i}.b*(psi(0,output{i}.a+1)- ...
-                  psi(0,output{i}.b+1))^2/...
-                ((output{i}.a+output{i}.b)^2*...
-                 (output{i}.a+output{i}.b+1));
+clear output;     % could pick a new name, but I got kind of to this one 
+output = struct;  %
+output.spikes = zeros(n, Nc*nTrials);
+for i = 1:n
+   tmptmp = squeeze(tmp(i,:,:));
+   output.spikes(i, :) = tmptmp(:);
 end
+output.spkCorrs = corr(output.spikes');
+clear i tmp tmptmp
 
-legend(lgnd);
-
-%% subplot 'b.0)' : plot c(T=1) for different rho's
-
- clrs = [
-254,227,145;   %
-254,196,79;    % a few 
-254,153,41;    % more and 
-236,112,20;    % slightly 
-204,76,2;      % different
-153,52,4;      % colors
-102,37,6]/255; %
-
-
-lgnd = cell(length(output)-1,1);
-for i = length(output):-1:2 % do not use rho = 0.001, it is just too small
-    [~, idxT] = min(abs(output{i}.Ts-1));
-    plot(output{i}.Ns, output{i}.cN(:,idxT), 's-', 'color',  clrs(i,:), ...
-        'linewidth', 3, 'markerSize', 4)
-    hold on
-    lgnd{end-i+2} = ['\rho = ', num2str(output{i}.rho)];
-    output{i}.cN(:,idxT)
-end
-legend(lgnd, 'Location', 'Northwest')
-legend boxoff
-box off
-set(gca, 'TickDir', 'out')
-set(gca, 'FontSize', fontSize)
-xlabel('population size', 'FontName', fontName, ...
-    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-set(gca, 'YTick', [0,10,20,30])
-ylabel('specific heat at T =  1', 'FontName', fontName, ...
-    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-set(gca, 'XTick', output{1}.Ns)
-
-%% subplot b) Summarize C(T=1) as function of N and estimated limit N->Inf
-if splitFigs
-  figure(37)
-  subplot(1,2,1)
-else
-  subplot(21,34,vec(bsxfun(@plus, (1:8)', (11:20)*34)))
-end    
-
- clrs = [
-254,227,145;   %
-254,196,79;    % a few 
-254,153,41;    % more and 
-236,112,20;    % slightly 
-204,76,2;      % different
-153,52,4;      % colors
-102,37,6]/255; %
-
-  for i = 1:length(idxSP) % got to plot phantom lines (just one point) to 
-                         % get figure legend to appear in the correct order
-  semilogx(output{1}.Ns(1), dcN(i,1), '-', 'color', clrs(end+1-i,:), ...
-      'linewidth', 0.001); hold on;      
-  end 
-  
-  for i = 2:length(idxSP)
-  semilogx(output{1}.Ns, dcN(i,:), '-', 'color', clrs(i,:), ...
-      'linewidth', 2); hold on;
-  semilogx(output{1}.Ns(end)*[2,2.2], limitRate(i)*[1,1], ...
-      'color', clrs(i,:), 'markerSize', 2, 'linewidth', 2);
-  semilogx(output{1}.Ns, dcN(i,:), 's', 'color', clrs(i,:), ...
-      'linewidth', 1.5, 'markerSize', 1.5); 
-  end
- set(gca, 'TickDir', 'out'); box off
- set(gca, 'Linewidth', axesThickness)
- 
- set(gca, 'FontSize', fontSize)
- xlabel('population size', 'FontName', fontName, ...
-     'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
- ylabel('sp. heat divergence rate', 'FontName', fontName, ...
-     'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
- ticks = [output{1}.Ns, output{1}.Ns(end)*2.05];
- set(gca,'XTick', ticks)
- lbls = cell(length(ticks),1);
- for i = 1:length(ticks), 
-     lbls{i} = num2str(ticks(i)); 
- end; lbls{end} = '';
- lgnd = cell(length(idxSP),1);
- for i = 2:length(idxSP)
-     lgnd{i} = ['\rho = ', num2str(output{end+1-i}.rho)];
- end
- if isempty(lgnd{1})
-     lgnd = lgnd(2:end);
- end
- hold off
- legend(lgnd)
- set(gca,'XTickLabel', lbls)
-
- set(gca, 'YTick', 0.01:0.01:0.05);
- axis([20^0.9, output{i}.Ns(end)*2.2, 0.8*min(dcN(:)), 1.05*max(dcN(:))])
-
-% some voodoo to replace the last tick with the symbol for infinity 
-xTicks = get(gca, 'xtick'); yTicks = get(gca, 'ytick');
-ax = axis; %Get left most x-position
-HorizontalOffset = 0.1;
-% Reset the xtick labels in desired font 
-minY = min(yTicks);
-text(output{i}.Ns(end)*2.05, 0.8*min(dcN(:)) - 0.0015, ...
-    ' $ \mathbf{\infty}$',...
-'HorizontalAlignment','Right','interpreter', 'latex');   
-
-
-% subplot b) Summarize C(T=1)/n as function of rho
-if splitFigs
-  figure(37)
-  subplot(1,2,2)
-else
-  subplot(21,34,vec(bsxfun(@plus, (9:11)', (11:20)*34)))
-end    
-
-rhos = zeros(length(output), 1);
-for i = 2:length(rhos), rhos(i) = output{i}.rho; end;
-
-plot(rhos(:), limitRate(:), '-', 'color', 0 * [1,1,1]), hold on
-for i = 2:length(idxSP),
-  plot(rhos(i), limitRate(i), 's', 'color', clrs(i,:), ...
-      'markerSize', 1.5, 'linewidth', 1.5)
-end
-
-plot(rhos, rhos .* log( (1-output{1}.mu)/output{1}.mu )^2 * ...
-    ( (1-output{1}.mu) * output{1}.mu ), 's', 'color', 0.3*[1,1,1], ...
-    'linewidth', 1.0, 'markerSize', 1.5, 'linewidth', 1.5)
-plot(rhos, rhos .* log( (1-output{1}.mu)/output{1}.mu )^2 * ...
-    ( (1-output{1}.mu) * output{1}.mu ), '--', 'color', 0*[1,1,1], ...
-    'linewidth', 1.0, 'linewidth', 1)
-
-plot(rhos(:), limitRate(:), '-', 'color', 0 * [1,1,1]), hold on
-for i = 2:length(idxSP),
-  plot(rhos(i), limitRate(i), 's', 'color', clrs(i,:), ...
-      'markerSize', 1.5, 'linewidth', 1.5)
-end
-
-hold off
-
-set(gca, 'FontSize', fontSize)
-xlabel('correlation', 'FontName', fontName, ...
-    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off
-set(gca, 'XTick', [0, 0.1, 0.2])
-set(gca, 'YTick', [0, 0.1, 0.2])
-set(gca, 'TickDir', 'out')
-axis([0, 1.05*max(rhos), 0.8*min(dcN(:)), 1.05*max(dcN(:))])
-
-%% subplot c) Heat traces for different stimuli
-
-maxi = 6;
-
+maxN = 120;
+maxi = maxN / 20;
 clrs = [254,153,41;
 236,112,20;
 204, 76,2;      % colors for inidivual traces.
@@ -246,98 +52,460 @@ clrs = [254,153,41;
 102,37,6;
 0,0,0]/255;
 
+%% a) different model fits to simulated data
+if splitFigs
+  figure(21)
+  subplot(1,2,1)
+else
+  subplot(21,34,vec(bsxfun(@plus,  (1:8)', (0:9)*34)))
+end
+ n = size(output.spikes,1);
+ pcount = sum(output.spikes,1)';
+ pcount = histc(pcount,0:n);
+ pcount = pcount/sum(pcount);
+ 
+  mu1 =  (0:n) * pcount;
+  mu2 = (0:n).^2 * pcount ;
+  Z = ( (n) * (mu2/mu1 - mu1 -1)) + mu1;
+  a = (n * mu1 - mu2) / Z;
+  b = (n - mu1) * (n - mu2/mu1) / Z; 
+  lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';  
+  pcount_betabin = exp(lognchoosek + betaln(a + (0:n), ...
+                        n + b - (0:n))' - betaln(a, b)); 
 
-for j = 1:3
-if j==1    
- if splitFigs
-  figure(38)
-  subplot(1,3,2)
- else
-  subplot(21,34,vec(bsxfun(@plus, (21:26)', (10:20)*34)))
- end    
- load('../results/K_pairwise_final/heat_traces_nat.mat') % specific heat
- rho = 0.075;
- idxRepetMax = 10;
- yTick = [1,2,3,4]; %[0.4, 0.8, 1.2];
-elseif j==2
-if splitFigs
-  figure(38)
-  subplot(1,3,1)
-else
-  subplot(21,34,vec(bsxfun(@plus, (28:33)', (10:20)*34)))
-end 
- rho = 0.341;
- load('../results/K_pairwise_final/heat_traces_fff.mat') % specific heat
- idxRepetMax = 10;
-elseif j ==3
-if splitFigs
-  figure(38)
-  subplot(1,3,3)
-else
-  subplot(21,34,vec(bsxfun(@plus, (14:19)', (10:20)*34)))
-end
- rho = 0.033;
- load('../results/K_pairwise_final/heat_traces_cb.mat') % specific heat
- idxRepetMax = 10;
-end
-maxi = size(cN,1)/2;
-lgnd = cell(maxi,1);
-for i = maxi:-1:1, 
-  plot(Ts, squeeze(mean(cN(2*i,:, :))), '-', ...
-      'color', clrs(i,:), 'linewidth', 2.5); 
-  lgnd{i} = ['n = ', num2str(20*(maxi-i+1))];
-  hold on;  
-  plot(Ts, squeeze(cN(2*i,:, :)), '-', ...
-      'color', clrs(i,:), 'linewidth', 1); 
-  lgnd{i} = ['n = ', num2str(20*(maxi-i+1))];
-  
-end;
-line([1,1], [0, 4.5], 'lineStyle', '-', 'color', 'k', 'linewidth', 0.8)
-for i = maxi:-1:1,
-  plot(Ts, squeeze(mean(cN(2*i,:, :))), '-', ...
-      'color', clrs(i,:), 'linewidth', 2.5); 
-  hold on;  
-  plot(Ts, squeeze(cN(2*i,:, :)), '-', ...
-      'color', clrs(i,:), 'linewidth', 1); 
-  lgnd{i} = ['n = ', num2str(20*(maxi-i+1))];
-  
-end;
-for i = maxi:-1:1,
-    plot(Ts, squeeze(mean(cN(2*i,:, :))), '-', ...
-        'color', clrs(i,:), 'linewidth', 0.8);
-    hold on;
-  plot(Ts, squeeze(cN(2*i,:, :)), '-', ...
-      'color', clrs(i,:), 'linewidth', 1); 
-  lgnd{i} = ['n = ', num2str(20*(maxi-i+1))];
-  
-end
-if j == 1
-  legend(lgnd, 'location', 'East')
+ [mu,rho,~]=meanvar_count_2_meancorr(mu1,mu2 - mu1^2,n); 
+ [hFI,JFI,pcount_flatIsing,~]=fit_flat_ising_model(mu,rho,n);
+ 
+ pcount_binomial = binopdf(0:n, n, mean(output.spikes(:)));
+
+semilogy(0:n,pcount, 's-', 'color', 'k', 'linewidth', 1.5,'markerSize',1.5)
+hold on
+semilogy(0,pcount_betabin(1),   'color', clrs(2,:), ...
+         'linestyle', '-', 'linewidth', 1.5);
+semilogy(0:n,pcount_binomial,  'color', [72, 60, 50]/255, ...
+         'linestyle', ':', 'linewidth', 1.5);
+semilogy(0:n,pcount_flatIsing, 'color', [145, 163, 176]/255, ...
+         'linestyle', '--', 'linewidth', 1.5);
+semilogy(0:n,pcount, 's', 'color', 'k', 'linewidth', 0.5, 'markerSize',1.5) 
+semilogy(0:n,pcount_betabin,   'color', clrs(2,:), 'linestyle', '-',  ...
+         'linewidth', 2.5);
+if ifAddGaussianFits 
+ pars0 = [0;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ fun = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut, fval] = minFunc(fun, pars0, fitoptions);
+ [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut, n, mu1, mu2);
+ disp('desired and true E(K) and E(K^2)')
+ [mu1, Ex; mu2, Ex2],  pause; 
+ pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+ pcount_gauss = pcount_gauss/sum(pcount_gauss);
+ semilogy(0:n,pcount_gauss,   'color', 'r', 'linestyle', '--', ...
+          'linewidth', 2.5);
 end
 hold off
 
-set(gca, 'Linewidth', axesThickness)
-text(1.3, 0.9*4.5, ['\rho = ', num2str(rho)], ...
-    'FontName', fontName, 'FontSize', fontSizeXlabel, ...
-    'FontWeight', fontWeight )
-box off
-set(gca, 'TickDir', 'out')
-set(gca, 'XTick', [1, 1.5, 2])
-set(gca, 'FontSize', fontSize)
-if j == 3
- set(gca, 'YTick', yTick)
- ylabel('specific heat c', 'FontName', fontName, ...
-     'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
+legend('data', 'beta-binomial', 'binomial', 'flat Ising')
+set(gca, 'FontSize', fontSize)  
+xlabel('population spike count', 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
+ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+       'FontWeight', fontWeight )
+axis([0, 140, 1.1 * 10^(-5), 1]); 
+box off, set(gca, 'TickDir' ,'out')
+
+if splitFigs
+  figure(21)
+  subplot(1,2,2)
 else
- set(gca, 'YTick', [])
-end    
-xlabel('temperature', 'FontName', fontName, ...
-    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-axis([0.8, 2, 0, 4.5])
+  subplot(21,34,vec(bsxfun(@plus,  (1:8)', (12:20)*34)))
 end
 
+idxRep = 1; 
 
-% %% export figure to specified size
+ for i =1:maxi
+   semilogy(0,0, '-', 'color', clrs(i,:), 'linewidth', 2.5)
+   hold on
+   lgnd{i} = ['n = ', num2str(20*i)];
+ end
+ legend(lgnd);
+ for i =1:maxi
+     
+   pcount = zeros(20*i+1,1);              
+   for t = 1:idxRep
+    idxN = randsample(n,20*i);    % pick subset of Ns(j) <= n neurons
+    histCounts = full(sum(output.spikes(idxN,:),1));          
+    pcount = pcount + histc(histCounts,0:20*i)';   
+   end     
+   pcount = pcount/sum(pcount);
+    
+  semilogy(0:length(pcount)-1,pcount, 's-', 'color', clrs(i,:), ...
+           'linewidth', 1.5, 'markerSize', 1.5)
+  hold on
+  semilogy(0:length(pcount)-1,pcount, 's', 'color', clrs(i,:), ...
+           'linewidth', 0.75, 'markerSize', 1.5)
+  mu1 =  (0:20*i) * pcount;
+  mu2 = (0:20*i).^2 * pcount ;
+  Z = ( (20*i) * (mu2/mu1 - mu1 -1)) + mu1;
+  a = (20*i * mu1 - mu2) / Z;
+  b = (20*i - mu1) * (20*i - mu2/mu1) / Z; 
+  lognchoosek = (gammaln(20*i+1) - gammaln((0:20*i)+1) - ...
+                 gammaln(20*i+1-(0:20*i)))';  
+  logpcount = lognchoosek + betaln(a + (0:20*i), 20*i + b - (0:20*i))' ...
+              - betaln(a, b); 
+  pcount = exp(logpcount);
+
+  semilogy(0:length(pcount)-1, pcount, '-', 'color', clrs(i,:), ...
+           'linewidth', 2.5)
+  if ifAddGaussianFits
+   pars0 = [0;0];
+   fitoptions = [];
+   fitoptions.DerivativeCheck = 'on';
+   f = @(pars) computeGradient2oMaxEnt(pars, 20*i, mu1, mu2);
+   [parsOut, fval] = minFunc(f, pars0, fitoptions);
+   [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut, 20*i, mu1, mu2);
+   disp('desired and true E(K) and E(K^2)')
+   [mu1, Ex; mu2, Ex2],  pause; 
+   logpcount_gauss = (parsOut(1) * (0:20*i) + parsOut(2) * (0:20*i).^2);
+   pcount_gauss = exp(logpcount_gauss - max(logpcount_gauss));
+   pcount_gauss = pcount_gauss/sum(pcount_gauss);
+   semilogy(0:length(pcount)-1, pcount_gauss, ':', 'color', clrs(i,:), ...
+           'linewidth', 2.5)
+  end  
+ end
+hold off
+
+set(gca, 'FontSize', fontSize)  
+xlabel('population spike count', 'FontName', fontName, 'FontSize', ...
+       fontSizeXlabel, 'FontWeight', fontWeight )
+ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+       'FontWeight', fontWeight )
+axis([0, 51, 1.1*10^(-4), 1]); 
+box off, set(gca, 'TickDir' ,'out')
+
+
+%% b) different fits to other people's data
+if splitFigs
+  figure(22)
+else
+  subplot(21,34,vec(bsxfun(@plus,  (11:18)', (12:20)*34)))
+end
+for i = 1:2:5
+  semilogy(-1, 0, 's-', 'color', clrs(i,:), 'linewidth',1.5,'markerSize',3)
+  hold on;
+end
+legend('Okun et al. 2012', 'Tkacik et al. 2013', 'Tkacik et al. 2012')
+% start with Okun data (n=96. Watch out: not 96 neurons, but 96 tetrodes!)
+n = 96;
+data_1=load('../data/other_studies/figure_data/Okun_Counts.txt');
+ks = round(data_1(:,1));
+pcount = data_1(:,2); pcount = pcount/sum(pcount);
+mu1 =  (ks') * pcount;               mu2 = (ks').^2 * pcount;
+Z = ( n * (mu2/mu1 - mu1 -1)) + mu1;
+a = (n * mu1 - mu2) / Z;             b = (n - mu1) * (n - mu2/mu1) / Z;
+lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';
+logpcount = lognchoosek + betaln(a + (0:n), n + b - (0:n))' - betaln(a, b);
+
+[a2,b2] = fitBetabinML(pcount, n, 100000);
+logpcount2 = lognchoosek + betaln(a2 + (0:n), n + b2 - (0:n))' ...
+            - betaln(a2, b2);
+semilogy(data_1(:,1), pcount, 's-', 'color', clrs(1,:), ...
+         'linewidth', 1.5, 'markerSize', 1.5)
+hold on
+semilogy(data_1(:,1), pcount, 's', 'color', clrs(1,:), ...
+         'linewidth', 0.75, 'markerSize', 3)
+semilogy(0:n, exp(logpcount), '-', 'color', clrs(1,:), 'linewidth', 2.5)
+
+if ifAddGaussianFits
+ pars0 = [0;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ f = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut,~] = minFunc(fun, pars0, fitoptions);
+  [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut,n, mu1, mu2);
+  disp('desired and true E(K) and E(K^2)')
+  [mu1, Ex; mu2, Ex2],  pause; 
+  pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+  pcount_gauss = pcount_gauss/sum(pcount_gauss);
+ semilogy(0:n, pcount_gauss, ':', 'color', clrs(1,:), 'linewidth', 2.5)
+end
+clear data_1 data_2 mu1 mu2 a b Z lognchoosek logpcount ks pcount
+
+% next add data from Tkacik et al. 2014
+n = 120;
+data_1=load('../data/other_studies/figure_data/Tkacik_2014_data.txt');
+ks = round(data_1(:,1));
+pcount = data_1(:,2); pcount = pcount/sum(pcount);
+mu1 =  (ks') * pcount;               mu2 = (ks').^2 * pcount;
+Z = ( n * (mu2/mu1 - mu1 -1)) + mu1;
+a = (n * mu1 - mu2) / Z;             b = (n - mu1) * (n - mu2/mu1) / Z;
+lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';
+logpcount = lognchoosek + betaln(a + (0:n), n + b - (0:n))' - betaln(a, b);
+
+[a2,b2] = fitBetabinML(pcount, n, 100000);
+logpcount2 = lognchoosek + betaln(a2 + (0:n), n + b2 - (0:n))' ...
+             - betaln(a2, b2);
+semilogy(data_1(:,1), pcount, 's-', 'color', clrs(3,:), ...
+         'linewidth', 1.5, 'markerSize', 1.5)
+hold on
+semilogy(data_1(:,1), pcount, 's', 'color', clrs(3,:), ...
+         'linewidth', 0.75, 'markerSize', 3)
+semilogy(0:n, exp(logpcount), '-', 'color', clrs(3,:), 'linewidth', 2.5)
+
+if ifAddGaussianFits
+ pars0 = [20;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ fun = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut,~] = minFunc(fun, pars0, fitoptions);
+ [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut,n, mu1, mu2);
+ disp('desired and true E(K) and E(K^2)')
+  [mu1, Ex; mu2, Ex2],  pause; 
+ pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+ pcount_gauss = pcount_gauss/sum(pcount_gauss);
+ semilogy(0:n, pcount_gauss, ':', 'color', clrs(3,:), 'linewidth', 2.5)
+end
+clear data_1 data_2 mu1 mu2 a b Z lognchoosek logpcount ks pcount
+
+% last, add data from Tkacik et al., 2012 
+% ('The simplest maximum entropy model for...')
+n = 40;
+data_1=load('../data/other_studies/figure_data/Tkacik_Real_Trace.mat');
+data_1=data_1.Tkacik_real_trace;
+ks = round(data_1(:,1));
+pcount = data_1(:,2); pcount = pcount/sum(pcount);
+mu1 =  (ks') * pcount;               mu2 = (ks').^2 * pcount;
+Z = ( n * (mu2/mu1 - mu1 -1)) + mu1;
+a = (n * mu1 - mu2) / Z;             b = (n - mu1) * (n - mu2/mu1) / Z;
+lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';
+logpcount = lognchoosek + betaln(a + (0:n), n + b - (0:n))' - betaln(a, b);
+[a2,b2] = fitBetabinML(pcount, n, 100000);
+logpcount2 = lognchoosek + betaln(a2 + (0:n), n + b2 - (0:n))' ...
+             - betaln(a2, b2);
+
+semilogy(data_1(:,1), pcount, 's-', 'color', clrs(5,:), ...
+         'linewidth', 1.5, 'markerSize', 1.5)
+hold on
+semilogy(data_1(:,1), pcount, 's', 'color', clrs(5,:), ...
+         'linewidth', 0.75, 'markerSize', 3)
+semilogy(0:n, exp(logpcount), '-', 'color', clrs(5,:), 'linewidth', 2.5)
+
+if ifAddGaussianFits
+ pars0 = [20;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ fun = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut,~] = minFunc(fun, pars0, fitoptions);
+ [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut,n, mu1, mu2);
+ disp('desired and true E(K) and E(K^2)')
+  [mu1, Ex; mu2, Ex2],  pause; 
+ pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+ pcount_gauss = pcount_gauss/sum(pcount_gauss);
+semilogy(0:n, pcount_gauss, ':', 'color', clrs(5,:), 'linewidth', 2.5)
+end
+clear data_1 data_2 mu1 mu2 a b Z lognchoosek logpcount ks pcount
+
+set(gca, 'FontSize', fontSize)  
+xlabel('population spike count', 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
+ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+       'FontWeight', fontWeight )
+axis([0, 61, 1.1*10^(-4), 1]); 
+box off, set(gca, 'TickDir' ,'out')
+
+%% c) goodness of beta-binomial fit
+load('fig_data/fig2_data_alphabeta.mat')
+
+if splitFigs
+  figure(24)
+  subplot(1,2,1)
+else
+  subplot(21,34,vec(bsxfun(@plus,  (11:18)', (0:4)*34)))
+end
+h = area(Ns, [mean(a,2)' - sqrt(var(a')); 2*sqrt(var(a'))]'); 
+h(2).FaceColor = clrs(1,:); h(1).FaceColor = [1,1,1];
+h(2).EdgeColor = [1,1,1]; h(1).EdgeColor = [1,1,1];
+hold on
+plot(Ns, mean(a,2), 'color', clrs(5,:), 'linewidth', 3),
+hold off
+set(gca, 'TickDir', 'out')
+set(gca, 'Xtick', [])
+set(gca, 'Ytick', [0.35,0.4,0.45])
+box off
+set(gca, 'Linewidth', axesThickness)
+axis([Ns(1), Ns(end), 0.32,0.49])
+set(gca, 'FontSize', fontSize)
+ylabel('\alpha', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+
+if splitFigs
+  figure(24)
+  subplot(1,2,2)
+else
+  subplot(21,34,vec(bsxfun(@plus,  (11:18)', (5:9)*34)))
+end
+h = area(Ns, [mean(b,2)' - sqrt(var(b')); 2*sqrt(var(b'))]'); 
+h(2).FaceColor = clrs(1,:); h(1).FaceColor = [1,1,1];
+h(2).EdgeColor = [1,1,1]; h(1).EdgeColor = [1,1,1];
+hold on
+plot(Ns, mean(b,2), 'color', clrs(5,:), 'linewidth', 3)
+set(gca, 'TickDir', 'out')
+set(gca, 'Xtick', [20, 160, 300])
+set(gca, 'Ytick', [11,13,15])
+box off
+set(gca, 'Linewidth', axesThickness)
+axis([Ns(1), Ns(end), 10.8,15.2])
+set(gca, 'FontSize', fontSize)
+xlabel('population size','FontName',fontName,'FontSize',fontSizeXlabel, ...
+    'FontWeight', fontWeight )
+ylabel('\beta', 'FontName',fontName,'FontSize',fontSizeYlabel,...
+    'FontWeight', fontWeight )
+
+
+%% d) Heat traces flat model
+
+
+if splitFigs
+  figure(23)
+else
+  subplot(21,34,vec(bsxfun(@plus,  (21:34)', (0:15)*34)))
+end
+
+load('../results/K_pairwise_final/heat_traces_flat_nat.mat')
+maxi = max(ns/10)/2;
+c = cN(2:2:end,:,:);
+
+for i = 1:maxi,
+    plot(Ts, squeeze(mean(c(i,:,:),2)),'color',clrs(i,:),'linewidth',2.5);
+    hold on;
+end
+for i = 1:maxi,
+    plot(Ts, squeeze(c(i,:,:)), '-', 'color', clrs(i,:), 'linewidth', 0.8);
+    hold on;
+end
+
+line([1,1], [0, 1.05*max(c(:))], 'linestyle', ':', 'color', 'k', ...
+    'linewidth', axesThickness)
+set(gca, 'Linewidth', axesThickness)
+axis([min(Ts),max(Ts),0.95*min(c(:)), 1.05*max(c(:))]); %axis autoy
+set(gca, 'XTick', [1, 1.5, 2]);
+set(gca, 'YTick', [1,3,5])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('temperature','FontName',fontName,'FontSize',fontSizeXlabel, ...
+    'FontWeight', fontWeight ) 
+ylabel('specific heat c','FontName',fontName,'FontSize',fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+
+%% inset
+inset2_1  = figure('Tag','fig2+1','units','centimeters','position',...
+    [0,0,4,3]);
+maxi = size(cN,1)/2; [~,idxT] = min(abs(Ts-1));
+lclrs = [0*[1,1,1]; 0.5*[1,1,1]];
+     
+cms = max(c(:,:,:),[],3);
+c1s = c(:,:,idxT) + (1-Ts(idxT))/(Ts(idxT+1)-Ts(idxT)) * ...
+    (c(:,:,idxT+1)-c(:,:,idxT));
+plot(20, mean(cms(1,:)), 'color', lclrs(1,:), 'linewidth', 1.5);
+hold on
+plot(20, mean(c1s(1,:)), 'color', lclrs(2,:), 'linewidth', 1.5);
+     
+% plot max{c(T)}
+plot(20*(1:maxi), mean(cms,2), '-', 'color', lclrs(1,:), 'linewidth', 1.5)
+for i = 1:maxi, plot(20*i, mean(cms(i,:),2), 's','color', clrs(i,:), ...
+        'linewidth', 2, 'markerSize', 2); end
+
+% plot c(T=1)
+plot(20*(1:maxi), mean(c1s,2), '-', 'color',lclrs(2,:), 'linewidth', 1.5)
+for i = 1:maxi, plot(20*i, mean(c1s(i,:),2), 's','color', clrs(i,:), ...
+        'linewidth', 2, 'markerSize', 2); end
+
+set(gca, 'TickDir', 'out')
+set(gca, 'Xtick', [20, 60, 100])
+set(gca, 'Ytick', [2, 4])
+box off
+set(gca, 'Linewidth', axesThickness)
+axis([15,20*maxi+5, 0.45, 5])
+set(gca, 'FontSize', fontSize)
+xlabel('n', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+    'FontWeight', fontWeight )
+ylabel('c', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+legend('max c', 'c at T=1', 'location', 'Northwest') 
+legend boxoff
+
+hold off
+
+
+%% e) Heat traces binomial and flat ising
+
+
+if splitFigs
+  figure(25)
+  subplot(1,2,1)
+else
+  figure(figure2)
+  subplot(21,34,vec(bsxfun(@plus,  (21:26)', (18:20)*34)))
+end
+
+load('fig_data/fig2_data.mat')
+maxi = length(Ns);
+
+for i = 1:maxi,
+  plot(Ts, squeeze(mean(cN(i,:,:,1),3)),'color',clrs(i,:),'linewidth',2.5);
+  hold on;
+end
+for i = 1:maxi,
+    plot(Ts, squeeze(cN(i,:,:,1)), '-', 'color',clrs(i,:),'linewidth',0.8);
+    hold on;
+end
+line([1,1], [0, 1.05*max(cN(:))], 'linestyle', ':', 'color', 'k', ...
+'linewidth', axesThickness)
+set(gca, 'Linewidth', axesThickness)
+axis([min(Ts),max(Ts),0.95*min(vec(squeeze(cN(:,:,:,1)))), ...
+    1.05*max(vec(squeeze(cN(:,:,:,1))))]); %axis autoy
+set(gca, 'XTick', [1, 1.5, 2]);
+set(gca, 'YTick', [0.3,0.4])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('temperature','FontName',fontName,'FontSize',fontSizeXlabel, ...
+    'FontWeight', fontWeight ) 
+ylabel('specific heat','FontName',fontName,'FontSize',fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+
+
+if splitFigs
+  figure(25)
+  subplot(1,2,2)
+else
+  subplot(21,34,vec(bsxfun(@plus,  (29:34)', (18:20)*34)))
+end
+
+for i = 1:maxi,
+  plot(Ts, squeeze(mean(cN(i,:,:,2),3)),'color',clrs(i,:),'linewidth',2.5);
+  hold on;
+end
+for i = 1:maxi,
+    plot(Ts, squeeze(cN(i,:,:,2)),'-','color',clrs(i,:),'linewidth', 0.8);
+    hold on;
+end
+
+line([1,1], [0, 1.05*max(cN(:))], 'linestyle', ':', 'color', 'k', ...
+    'linewidth', axesThickness)
+set(gca, 'Linewidth', axesThickness)
+axis([min(Ts),max(Ts),0.95*min(vec(squeeze(cN(:,:,:,2)))), ...
+    1.05*max(vec(squeeze(cN(:,:,:,2))))]); %axis autoy
+set(gca, 'XTick', [1, 1.5, 2]);
+set(gca, 'YTick', [0.4,0.8,1.2])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('temperature','FontName', fontName, 'FontSize', fontSizeXlabel, ...
+    'FontWeight', fontWeight ) 
+ylabel('specific heat', 'FontName',fontName,'FontSize',fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+
+
+%% export figure to specified size
 % if ~splitFigs
 %              s.Version= '1';
 %              s.Format= 'pdf';
@@ -369,15 +537,25 @@ end
 %  %            s.ShowUI= 'on'
 %  %      s.SeparateText= 'off'
 %        
-%  hgexport(figure3,'f1.pdf',s);     
-%  export_fig('fig3.pdf')
+%  figure(figure2);
+%  hgexport(figure2,'f2.pdf',s);     
+%  figure(figure2);
+%  pause;
+%  export_fig('fig2.pdf')
 %  
 %  
+%               s.Width= '4';
+%              s.Height= '3';
+% 
+%  figure(inset2_1);             
+%  hgexport(inset2_1,'test.pdf',s);     
+%  figure(inset2_1);            
+%  pause; 
+%  export_fig('fig2_1.pdf')
+% % hgexport(inset2_2,'test.pdf',s);     
+% % export_fig('fig2_2.pdf')
+% % hgexport(inset2_3,'test.pdf',s);     
+% % export_fig('fig2_3.pdf')
 %  
-% %              s.Width= '3';
-% %             s.Height= '2';
-%              
-% % hgexport(inset3_1,'test.pdf',s);     
-% % export_fig('fig3_1.pdf')
 %  
 % end

@@ -1,7 +1,6 @@
-%% produces first obsolete version fig 1 for the journal version of 
-% 'criticality and correlations' 
-% figure '1' was the overview figure summarising our simulation and how
-% we find signatures of 'criticality' in this data
+%% produces fig 1 for the journal version of 'criticality and correlations' 
+% figure '1' is the overview figure summarising the criticality analysis
+% procedure introduced by Tkacik et al. 
 
 clear all
 
@@ -26,6 +25,7 @@ fontSizeText   = 1 * 10;   fontSizeLegend = 1 * 11;
 % output.spkCovs
 load('../data/RGC_sim_nat.mat')        % loads raw simulated RGC data
 load('../results/K_pairwise_final/heat_traces_nat.mat') % specific heat 
+load('../results/K_pairwise_final/idxSubsamples.mat')
 
  n = size(output,3);         % get input spike raster format
  Nc = size(output,1);        % n = number of cells, Nc = trial length
@@ -45,26 +45,51 @@ end
 output.spkCorrs = corr(output.spikes');
 clear i tmp tmptmp
 
+% pick two population sizes: n1, n2. 
+% As figure 1 serves mostly just as an illustration, also pick the example
+% subpopulations per hand: The selection below was made because the 
+% histograms over firing rates have similar peak values and can thus be 
+% plotted with the same bar hights and y-axis. 
+n1 = 2; 
+n2 = 6;
+i1 = 7;
+i2 = 1;
+
 %%
 
-% subplot b) Plot RGC centers
+% subplot a) top: Plot RGC centers
 if splitFigs
   figure(12)
 else
-  subplot(21,34,vec(bsxfun(@plus,  (1:10)', (14:20)*34)))
-%  subplot(17,11,vec(bsxfun(@plus, (7:11)', (0:4)*11)))
+   subplot(2,4,1)
+
 end
 magFactor = 1.05;
-clrs = copper(2*6000);  % choose colors in analogy to 
-clrs = clrs(end/2+1:end,:); % figure 4 - RGC center plot
-clrs = clrs(3/4*end,:); %
+
+clrs = [254,153,41;236,112,20;204, ...     % colors for inidivual traces.
+        76,2;153,52,4;102,37,6;0,0,0]/255; % 
+
 plot(double(pixel_size)*cell_positions(1,:), ...
      double(pixel_size)*cell_positions(2,:), ...
-     'o', 'color', clrs, 'linewidth', 1.25, 'markerSize', 3)
+     'o', 'color', 0.5*[1,1,1], 'markerSize', 3, ...
+     'markerFaceColor', 0.5*[1,1,1])
+hold on 
+
+idx1 = idxSubsamples{n1}(:,i1);
+plot(double(pixel_size)*cell_positions(1,idx1), ...
+     double(pixel_size)*cell_positions(2,idx1), ...
+     'o', 'color', clrs(n1/2,:), 'markerSize', 3, ...
+     'markerFaceColor', clrs(n1/2,:))
+idx2 = idxSubsamples{n2}(:,i2);
+plot(double(pixel_size)*cell_positions(1,idx2), ...
+     double(pixel_size)*cell_positions(2,idx2), ...
+     'o', 'color', clrs(n2/2,:), 'markerSize', 3, ...
+     'markerFaceColor', clrs(n2/2,:))
+hold off
 axis(magFactor*[-150,150,-100,100])
 set(gca, 'YTick', [-50,0,50]);
 set(gca, 'XTick', [-100,0,100]);
-set(gca, 'XAxisLocation', 'top')
+set(gca, 'XAxisLocation', 'bottom')
 set(gca, 'visible', 'on')
 set(gca, 'Linewidth', axesThickness)
 box off; set(gca, 'TickDir' ,'out')
@@ -83,51 +108,80 @@ xlabel(['x-coordinate [', txt,'m]'], 'FontName', fontName, ...
 ylabel(['y-coordinate [', txt,'m]'], 'FontName', fontName, ...
     'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
 
+title('subsample population recordings','FontName',fontName,'FontSize',fontSizeYlabel, ...
+    'FontWeight', fontWeight )
 
-%% subplot c) Make raster plot
+
+%% subplot a, bottom) Make raster plot
 if splitFigs
   figure(13)
 else
-  subplot(21,34,vec(bsxfun(@plus, 2*(7:11)', (0:8)*34)))
+  subplot(2,4,5)
+  %subplot(21,34,vec(bsxfun(@plus, 2*(7:11)', (0:8)*34)))
 end
-raster = output.spikes(101:200,1000:1100);
-imagesc(1-raster);
-colormap('gray')
+idx1 = sort(idxSubsamples{n1}(:,i1));
+idx2 = sort(idxSubsamples{n2}(:,i2));
+
+idx12 = sort(randsample(n, 100, false));
+raster = output.spikes(idx12,1000:1050);
+
+for i = 1:size(raster,1)
+    if ismember(i, idx1)
+        clr = clrs(n1/2,:); 
+    elseif ismember(i, idx2),
+        clr = clrs(n2/2,:); 
+    else
+        clr = 0.5 * [1,1,1];
+    end
+    plot(find(raster(i,:)), i * ones(sum(raster(i,:)>0),1), 's', ...
+    'color', clr, 'markerFaceColor', clr, 'markersize', 4, 'linewidth', 0.5);
+    hold on
+end
+colormap([clrs(n1/2,:); clrs(n2/2,:);[1,1,1]])
+axis([-1, size(raster,2), -0.5, size(raster,1)+1.5])
+
 set(gca, 'Linewidth', axesThickness)
 set(gca, 'XTick', 1:50:size(raster,2));
 set(gca, 'XTickLabel', (0:50:size(raster,2))/50);
-YTick = size(raster,1):-50:0;
-%YTick = [];
-set(gca, 'YTick', YTick(end:-1:1));
-set(gca, 'YTickLabel', floor(size(raster,1)/50)*50:-50:0);
+YTick = [100;1];
+set(gca, 'YTick', size(raster,1)-YTick);
+set(gca, 'YTickLabel', {'100', '1'});
 set(gca, 'FontSize', fontSize)
-axis([-1, size(raster,2), 0.5, size(raster,1)+1.5])
 xlabel('time (s)', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
     'FontWeight', fontWeight )
 ylabel('neuron label','FontName', fontName, 'FontSize', fontSizeYlabel, ...
     'FontWeight', fontWeight )
 box off, set(gca, 'TickDir' ,'out')
 
+
 %% subplot d) 
 % Plot firing rate 
-if splitFigs
-  figure(14)
-  subplot(2,2,1)
-else
-  subplot(21,34,vec(bsxfun(@plus, (14:16)', (11:14)*34)))
-end
 binSize = 50; % 20ms bins => factor 1/0.02 = 50 
 firingRates = binSize*mean(output.spikes,2);
 xrange = linspace(0.95*min(firingRates),1.05*max(firingRates),25);
 h = histc(firingRates, xrange);
+sh = sum(h);
 h = h/sum(h);
 
-clrs = [254,153,41;236,112,20;204, ...     % colors for inidivual traces.
-        76,2;153,52,4;102,37,6;0,0,0]/255; % Currently picked by hand.
+idx1 = idxSubsamples{n1}(:,i1);
+h1 = histc(firingRates(idx1), xrange);
+sh = sum(h1);
+h1 = h1/sh;
+idx2 = idxSubsamples{n2}(:,i2);
+h2 = histc(firingRates(idx2), xrange);
+sh = sum(h2);
+h2 = h2/sh;
 
-bar(xrange, h, 1, 'faceColor', clrs(2,:),'edgeColor', clrs(2,:));
+clrs = [254,153,41;236,112,20;204, ...     % colors for inidivual traces.
+        76,2;153,52,4;102,37,6;0,0,0]/255; % 
+    
+
+
+subplot(3,8,3)
+bar(xrange, h1, 1, 'faceColor', clrs(n1/2,:),'edgeColor', clrs(n1/2,:));
 set(gca, 'Linewidth', axesThickness)
 set(gca, 'TickLength', 2.5*get(gca, 'TickLength'))
+axis square
 if min(firingRates) < 0
  mx = 1.2*min(firingRates); 
 else
@@ -144,20 +198,60 @@ xlabel('firing rate [Hz]',    'FontName', fontName, ...
     'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
 ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
     'FontWeight', fontWeight )
+text(3, 0.15, ['n = ', num2str(10*n1)])
+
+title('extract statistics','FontName',fontName,'FontSize',fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+
+
+subplot(3,8,4)
+bar(xrange, h2, 1, 'faceColor', clrs(n2/2,:),'edgeColor', clrs(n2/2,:));
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'TickLength', 2.5*get(gca, 'TickLength'))
+axis square
+if min(firingRates) < 0
+ mx = 1.2*min(firingRates); 
+else
+ mx = 0.5*min(firingRates); 
+end    
+Mx = 1.05*max(firingRates);
+axis([mx,Mx,-0.05*max(h),1.05*max(h)])
+set(gca, 'YTick', [0:0.1:max(h)]);
+set(gca, 'XTick', [1:4]);
+set(gca, 'Linewidth', axesThickness)
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('firing rate [Hz]',    'FontName', fontName, ...
+    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
+text(3, 0.15, ['n = ', num2str(10*n2)])
+
 
 % Plot correlation coefficient histograms
-if splitFigs
-  figure(14)
-  subplot(2,2,2)
-else
-  subplot(21,34,vec(bsxfun(@plus, (14:16)', (17:20)*34)))
-end
 idxM = logical(triu(ones(size(output.spikes,1)),1));
 corrs = output.spkCorrs(idxM);
 xrange = linspace(min(corrs),1.05*max(corrs),40);
 h = histc(corrs, xrange);
+sh = sum(h);
 h = h/sum(h);
-bar(xrange, h, 1, 'faceColor', clrs(2,:), 'edgeColor', clrs(2,:));
+
+idx1 = zeros( size(output.spikes,1) );
+idx1(idxSubsamples{n1}(:,i1)) = 1;
+idx1= logical(triu(idx1*idx1',1));
+h1 = histc(output.spkCorrs(idx1), xrange);
+sh = sum(h1);
+h1 = h1/sh;
+
+idx2 = zeros( size(output.spikes,1) );
+idx2(idxSubsamples{n2}(:,i2)) = 1;
+idx2 = logical(triu(idx2*idx2',1));
+h2 = histc(output.spkCorrs(idx2), xrange);
+sh = sum(h2);
+h2 = h2/sh;
+
+subplot(3,8,11)
+bar(xrange, h1, 1, 'faceColor', clrs(n1/2,:),'edgeColor', clrs(n1/2,:));
+
+axis square
 set(gca, 'Linewidth', axesThickness)
 set(gca, 'TickLength', 2.5*get(gca, 'TickLength'))
 if min(corrs) < 0
@@ -166,8 +260,8 @@ else
  mx = 0.9*min(corrs); 
 end    
 Mx = 1*max(corrs);
-axis([mx,Mx,-0.05*max(h),1.05*max(h)])
-set(gca, 'YTick', [0:0.1:max(h)]);
+axis([mx,Mx,-0.05*max(h1),1.05*max(h1)])
+set(gca, 'YTick', [0:0.1:max(h1)]);
 set(gca, 'XTick', 0:0.2:0.4);
 box off, set(gca, 'TickDir' ,'out')
 set(gca, 'FontSize', fontSize)
@@ -178,120 +272,181 @@ xlabel(['correlation'], 'FontName',fontName,'FontSize', fontSizeXlabel, ...
 ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
     'FontWeight', fontWeight )
 
-% Plot P(K)
-if splitFigs
-  figure(14)
-  subplot(2,2,3:4)
+subplot(3,8,12)
+bar(xrange, h2, 1, 'faceColor', clrs(n2/2,:),'edgeColor', clrs(n2/2,:));
+
+axis square
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'TickLength', 2.5*get(gca, 'TickLength'))
+if min(corrs) < 0
+ mx = 2*min(corrs); 
 else
-  subplot(21,34,vec(bsxfun(@plus, (18:22)', (11:20)*34)))
-end
+ mx = 0.9*min(corrs); 
+end    
+Mx = 1*max(corrs);
+axis([mx,Mx,-0.05*max(h1),1.05*max(h1)])
+set(gca, 'YTick', [0:0.1:max(h2)]);
+set(gca, 'XTick', 0:0.2:0.4);
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+txt = ['{\fontname{',fontName,'}\fontsize{', num2str(fontSizeXlabel), ...
+    '}\rho_{ij}}'];
+xlabel(['correlation'], 'FontName',fontName,'FontSize', fontSizeXlabel, ...
+    'FontWeight', fontWeight ) 
+
+
+% Plot P(K)
 K = sum(output.spikes,1); 
 xrange = 0:max(K)+1; 
 h = histc(K, xrange);
+sh = sum(h);
 h = h/sum(h);
-semilogy(xrange, h, '-', 'color', clrs(2,:),'linewidth', 1.5, ...
+
+idx1 = idxSubsamples{n1}(:,i1);
+K1 = sum(output.spikes(idx1,:),1);
+h1 = histc(K1, xrange);
+sh = sum(h1);
+h1 = h1/sh;
+idx2 = idxSubsamples{n2}(:,i2);
+K2 = sum(output.spikes(idx2,:),1);
+h2 = histc(K2, xrange);
+sh = sum(h2);
+h2 = h2/sh;
+
+subplot(3,8,19)
+semilogy(xrange, h1, '-', 'color', clrs(n1/2,:),'linewidth', 1.5, ...
     'markerSize', 1.5);
 hold on
-semilogy(xrange, h, 's', 'color', clrs(2,:),'linewidth', 1.5, ...
+semilogy(xrange, h1, 's', 'color', clrs(n1/2,:),'linewidth', 1.5, ...
     'markerSize', 1.5);
-
+hold off
+axis square
 set(gca, 'Linewidth', axesThickness)
 mx = -1; Mx = 120; %1.05*max(K);
-axis([mx,Mx,10^(-5.2),10^(0)]); %axis autoy
-set(gca, 'XTick', 0:40:max(K));
-set(gca, 'YTick', 10.^[-5,-3,-1])
+axis([mx,11,10^(-4.4),1.01]); 
+set(gca, 'XTick', 0:5:max(K1));
+set(gca, 'YTick', 10.^[-4,-2,0])
 box off, set(gca, 'TickDir' ,'out')
 set(gca, 'FontSize', fontSize)
-xlabel('population spike count'   , 'FontName', fontName, ...
+xlabel('pop. spike count'   , 'FontName', fontName, ...
     'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
 ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
     'FontWeight', fontWeight )
 
-%% e) googness of fit
 
-% used temperatures (slight annoyance with getting the ordering right)
-Ts = [ 0.8000, 0.8563, 0.9000, 0.9363, 0.9675, 0.9938, 1.0175, 1.0388, ...
-       1.0388, 1.0575, 1.0775, 1.0988, 1.1200, 1.1413, 1.1650, 1.1900, ...
-       1.2150, 1.2425, 1.2713, 1.3013, 1.3338, 1.3687, 1.4063, 1.4463, ...
-       1.4463, 1.4900, 1.5375, 1.5900, 1.6500, 1.7175, 1.7950, 1.8875, ...
-       2.0000];
-
-n = 100;
-idxRepets = [1];
-range = (100*Ts(1):100*Ts(end));
-clrs = jet( length(range) );
-
-c = zeros(31,1);
-
-if splitFigs
-  figure(22)
-  subplot(1,2,1)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (25:31)', (0:4)*34)))
-end
-
-for idxRepet = idxRepets 
- for i = 1:31,
-  tmp = num2str(Ts(i)); tmp(tmp=='.')='_';    
-  load(['../results/method_validation/specific_heat_samples_long_runs/',...
-        'longRun',num2str(n),'idxRepet',num2str(idxRepet),'T',tmp,'.mat']) 
-  x = linspace( 0.001, (n/100)^2 * 12, size(MoE,2)-1);
-  tmp = MoE(2,1:end-1) - MoE(1,1:end-1).^2;
-  tmp = cumsum(tmp) ./ (1:length(tmp));
-  [~, idxClr] = min(abs( 100*Ts(i) - range));
-  semilogx(x, tmp/n, 'color', clrs(idxClr,:), 'linewidth', 0.75),
-  hold on
-  c(i) = mean(MoE(2,2:end-1)-MoE(1,2:end-1).^2)/n;
- end
-end
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'XTick',      [ 1/64,   1/32,   1/16,   1/8,   ...
-                          1/4,   1/2,   1,  2,  4,  8])
-set(gca, 'XTickLabel', {'1/64', '1/32', '1/16', '1/8', ...
-                         '1/4', '1/2', '1','2','4','8'})
-set(gca, 'YTick', [0, 0.5, 1])
-set(gca, 'FontSize', fontSize)  
-xlabel('time [h]', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
-    'FontWeight', fontWeight )
-ylabel('specific heat', 'FontName', fontName, ...
-    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
-box off, set(gca, 'TickDir' ,'out')
-axis([1/60,12,0,1.45])
-hold off
-
-if splitFigs
-  figure(22)
-  subplot(1,2,2)
-else
-  subplot(21,34,vec(bsxfun(@plus,  (32:34)', (0:4)*34)))
-end
-plot(Ts(1:31), c, 'color', 0.3*[1,1,1], 'linewidth', 1.25);
+subplot(3,8,20)
+semilogy(xrange, h2, '-', 'color', clrs(n2/2,:),'linewidth', 1.5, ...
+    'markerSize', 1.5);
 hold on
-for idxRepet = idxRepets 
- for i = 1:31,
-  tmp = num2str(Ts(i)); tmp(tmp=='.')='_';    
-  %load(['../results/method_validation/specific_heat_samples/VarEsn',...
-  %num2str(n), 'idxRepet', num2str(idxRepet), 'T', tmp, '.mat']) 
-  [~, idxClr] = min(abs( 100*Ts(i) - range));
-  plot(Ts(i), c(i,idxRepet), 's', 'color', clrs(idxClr,:), ...
-      'linewidth', 1.5, 'markerSize', 1.5)
- end
-end
+semilogy(xrange, h2, 's', 'color', clrs(n2/2,:),'linewidth', 1.5, ...
+    'markerSize', 1.5);
 hold off
+axis square
 set(gca, 'Linewidth', axesThickness)
-set(gca, 'XTick', [1, 1.5, 2])
-set(gca, 'FontSize', fontSize)
-xlabel('temperature', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
-    'FontWeight', fontWeight )
-set(gca, 'YTick', [])
+mx = -1; Mx = 120; %1.05*max(K);
+axis([mx,33,10^(-4.4),1.01]); 
+set(gca, 'XTick', 0:10:max(K2));
+set(gca, 'YTick', 10.^[-4,-2,0])
 box off, set(gca, 'TickDir' ,'out')
-axis([0.8, 2,0,1.45])
+set(gca, 'FontSize', fontSize)
+xlabel('pop. spike count'   , 'FontName', fontName, ...
+    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
+
+
+%% plot empirical vs. model data moments
+
+load('/home/mackelab/Desktop/Projects/Criticality/code/project_current/results/K_pairwise_final/lambda_nat.mat')
+load('/home/mackelab/Desktop/Projects/Criticality/results/EfxSimData.mat')
+load('/home/mackelab/Desktop/Projects/Criticality/code/project_current/figures/fig_data/fig1_data.mat')
+
+% make sure we use our color-scheme again
+clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;
+for j = 2:-1:1,
+    
+    n = 10 * ns(j);
+    i = is(j);    
+    
+    fDescrJ = nchoosek(1:n,2)'; 
+    covsx = Efx{n/10}((n+1):(n*(n+1)/2),i) - ... % covariance as computed
+           (Efx{n/10}(fDescrJ(1, :),i).* ...
+            Efx{n/10}(fDescrJ(2, :),i)); % from Efx    for j = js, 
+    varsx = Efx{n/10}(1:n,i) .* (1 - Efx{n/10}(1:n,i));
+    corsx = covsx ./(sqrt(varsx(fDescrJ(1,:))).*sqrt(varsx(fDescrJ(2,:))));
+    Efy = xSampled{j};
+    covsy = Efy((n+1):(n*(n+1)/2)) - ... % covariance as computed
+           (Efy(fDescrJ(1, :)).* Efy(fDescrJ(2, :))); % from Efx    
+    varsy = Efy(1:n) .* (1 - Efy(1:n));
+    corsy = covsy ./(sqrt(varsy(fDescrJ(1,:))).*sqrt(varsy(fDescrJ(2,:))));
+    
+    subplot(3,8,5)
+    if j == 2
+        line([0, 5], [0, 5], 'color', 'k')
+        hold on
+        title('fit maximum entropy models','FontName',fontName,'FontSize',fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+    end
+    plot(50 * Efx{n/10}(1:n,i), 50 * Efy(1:n), 'o', 'color', clrs(n/20,:), ...
+        'markersize', 3, 'markerFaceColor', clrs(n/20,:))
+    axis square
+    hold on;
+    axis([0.015, 0.08, 0.015, 0.08] * 50)
+    set(gca, 'XTick', [1:4])
+    set(gca, 'YTick', [1:4])
+    set(gca, 'TickDir', 'out')
+    xlabel('firing rate [Hz]',  'FontName',fontName, 'FontSize', fontSizeXlabel, ...
+           'FontWeight', fontWeight )
+    ylabel('firing rate [Hz]',  'FontName',fontName, 'FontSize', fontSizeXlabel, ...
+           'FontWeight', fontWeight )
+    box off
+    set(gca, 'FontSize', fontSize)
+    
+    
+    subplot(3,8,13)
+    if j == 2
+        line([-0.1, 0.6], [-0.1, 0.6], 'color', 'k')
+        hold on
+    end
+    plot(corsx, corsy, 'o', 'color', clrs(n/20,:), ..., 
+        'markersize', 3, 'markerFaceColor', clrs(n/20,:))
+    axis square
+    axis([-0.05, 0.6, -0.05, 0.6])
+    hold on;
+    set(gca, 'XTick', [0, 0.2, 0.4])
+    set(gca, 'YTick', [0, 0.2, 0.4])
+    set(gca, 'TickDir', 'out')
+    xlabel('correlation',  'FontName',fontName, 'FontSize', fontSizeXlabel, ...
+           'FontWeight', fontWeight )
+    ylabel('correlation',  'FontName',fontName, 'FontSize', fontSizeXlabel, ...
+           'FontWeight', fontWeight )
+    box off
+    set(gca, 'FontSize', fontSize)
+    
+    
+    subplot(3,8,21)
+    semilogy(0:n, Efx{n/10}(end-n:end,i), '.-', 'color', 0.7 * [1,1,1])
+    hold on
+    semilogy(0:n, Efy(end-n:end), '.-', 'color', clrs(n/20,:));
+    axis square
+    axis([0, 33, 10^-4.4, 1.01])
+    hold on;
+    xlabel('pop. spike-count',  'FontName',fontName, 'FontSize', fontSizeXlabel, ...
+           'FontWeight', fontWeight )
+    ylabel('probability',  'FontName',fontName, 'FontSize', fontSizeXlabel, ...
+           'FontWeight', fontWeight )
+    box off
+    set(gca, 'FontSize', fontSize)
+    set(gca, 'XTick', [0, 10, 20, 30])
+    set(gca, 'YTick', [10^-4, 10^-2, 10^0])
+    set(gca, 'TickDir', 'out')
+    
+end
+
 
 %% f) Heat traces
 if splitFigs
   figure(16)
 else
-  subplot(21,34,vec(bsxfun(@plus, (25:34)', (7:20)*34)))
+  subplot(1,3,3)
 end
 maxN = 120;
 maxi = maxN / 20;
@@ -302,119 +457,24 @@ clrs = [254,153,41;
 102,37,6;
 0,0,0]/255;
 
-Ts = [0.8000,0.8563,0.9000,0.9363,0.9675,0.9938,1.0175,1.0388,1.0575, ...
-    1.0775,1.0988,1.1200,1.1413,1.1650,1.1900,1.2150,1.2425,1.2713, ...
-    1.3013,1.3338,1.3687,1.4063,1.4463,1.4900,1.5375,1.5900,1.6500, ...
-    1.7175,1.7950,1.8875,2.0000];
-
 c = cN(2:2:end,:,:);
 
-for i = 1:maxi,
-    plot(Ts, squeeze(mean(c(i,:,:),2)),'color',clrs(i,:),'linewidth',2.5);
-    hold on;
-end
-for i = 1:maxi,
-    plot(Ts, squeeze(c(i,:,:)), '-', 'color', clrs(i,:), 'linewidth', 0.8);
-    hold on;
-end
+plot(Ts, squeeze(c(n1/2,i1,:)), '-', 'color', clrs(n1/2,:), 'linewidth', 3.0);
+hold on
+plot(Ts, squeeze(c(n2/2,i2,:)), '-', 'color', clrs(n2/2,:), 'linewidth', 3.0);
+hold off
+
 line([1,1], [0, 1.05*max(c(:))], 'linestyle', '--', 'color', 'k', ...
     'linewidth', axesThickness)
 set(gca, 'Linewidth', axesThickness)
-axis([min(Ts),max(Ts),0.95*min(c(:)), 1.05*max(c(:))]); %axis autoy
+axis([min(Ts),max(Ts),0.95*min(c(:)), 1.2]); %axis autoy
 set(gca, 'XTick', [1, 1.5, 2]);
 set(gca, 'YTick', [0.5, 1, 1.5])
 box off, set(gca, 'TickDir' ,'out')
 set(gca, 'FontSize', fontSize)
 xlabel('temperature'   , 'FontName',fontName,'FontSize',fontSizeXlabel, ...
     'FontWeight', fontWeight ) 
-ylabel('specific heat c','FontName',fontName,'FontSize',fontSizeYlabel, ...
+ylabel('specific heat','FontName',fontName,'FontSize',fontSizeYlabel, ...
     'FontWeight', fontWeight )
-
-%% inset
-inset1_1=figure('Tag', 'fig1', 'units','centimeters','position',[0,0,4,3]);
-maxi = size(cN,1)/2; [~,idxT] = min(abs(Ts-1));
-lclrs = [0*[1,1,1]; 0.5*[1,1,1]];
-     
-cms = max(c(:,:,:),[],3);
-c1s = c(:,:,idxT) + (1-Ts(idxT))/(Ts(idxT+1)-Ts(idxT)) * ...
-      (c(:,:,idxT+1)-c(:,:,idxT));
-plot(20, mean(cms(1,:)), 'color', lclrs(1,:), 'linewidth', 1.5);
-hold on
-plot(20, mean(c1s(1,:)), 'color', lclrs(2,:), 'linewidth', 1.5);
-     
-% plot max{c(T)}
-plot(20*(1:maxi), mean(cms,2), '-', 'color', lclrs(1,:), 'linewidth', 1.5)
-for i = 1:maxi, plot(20*i, mean(cms(i,:),2), 's','color', clrs(i,:), ...
-        'linewidth', 2, 'markerSize', 2); end
-
-% plot c(T=1)
-plot(20*(1:maxi), mean(c1s,2), '-', 'color',lclrs(2,:), 'linewidth', 1.5)
-for i = 1:maxi, plot(20*i, mean(c1s(i,:),2), 's','color', clrs(i,:), ...
-        'linewidth', 2, 'markerSize', 2); end
-
-set(gca, 'TickDir', 'out')
-set(gca, 'Xtick', [20, 60, 100])
-set(gca, 'Ytick', [0.5, 1,1.5])
-box off
-set(gca, 'Linewidth', axesThickness)
-axis([15,20*maxi+5, 0.45, 1.6])
-set(gca, 'FontSize', fontSize)
-xlabel('n', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+title('compute specific heat','FontName',fontName,'FontSize',fontSizeYlabel, ...
     'FontWeight', fontWeight )
-ylabel('c', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
-    'FontWeight', fontWeight )
-legend('max c', 'c at T=1', 'location', 'Northwest') 
-legend boxoff
-
-hold off
-
-%% export figure to specified size
-% if ~splitFigs
-%              s.Version= '1';
-%              s.Format= 'pdf';
-%             s.Preview= 'none';
-%               s.Width= '19';
-%              s.Height= '11';
-%               s.Units= 'centimeters';
-%               s.Color= 'rgb';
-%          s.Background= 'w';
-%  %     s.FixedFontSize= 'auto'
-%  %    s.ScaledFontSize= 'auto'
-%  %          s.FontMode= 'scaled'
-%  %       s.FontSizeMin= '8'
-%  %    s.FixedLineWidth= '1'
-%  %   s.ScaledLineWidth= 'auto'
-%  %          s.LineMode= 'scaled'
-%  %      s.LineWidthMin= '2'
-%  %          s.FontName= 'auto'
-%  %        s.FontWeight= 'auto'
-%  %         FontAngle= 'auto'
-%  %      s.FontEncoding= 'auto'
-%  %           s.PSLevel= '2'
-%  %          s.Renderer= 'auto'
-%  %        s.Resolution= 'auto'
-%  %      s.LineStyleMap= 'none'
-%          s.ApplyStyle= '1';
-%              s.Bounds= 'loose';
-%  %          s.LockAxes= 'on'
-%  %            s.ShowUI= 'on'
-%  %      s.SeparateText= 'off'
-% 
-%  figure(figure1);
-%  hgexport(figure1,'/home/mackelab/Desktop/test.pdf',s);     
-%  figure(figure1);
-%  pause;
-%  export_fig('/home/mackelab/Desktop/Projects/fig1.pdf')
-%  
-% %%
-%               s.Width= '4';
-%              s.Height= '3';
-%              
-%  figure(inset1_1);             
-%  hgexport(inset1_1,'/home/mackelab/Desktop/test2.pdf',s);     
-%  figure(inset1_1);             
-%  pause;
-%  export_fig('/home/mackelab/Desktop/Projects/fig1_1.pdf')
-% 
-%  
-% end
