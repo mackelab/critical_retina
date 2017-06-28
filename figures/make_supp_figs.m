@@ -499,146 +499,6 @@ set(gca, 'XTickLabel', {'cb', 'nat', 'fff'})
 
 clearvars -except figureS1 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
-%% supplementary figure: randomized P(K) and retained criticality
-figureS3 = figure('Tag', 'figS3', 'units','centimeters','position', ...
-                  [0,0,19,11]);
-load('fig_data/figS3_data_shuffle.mat')
-
-clrs = copper(18);
-
-% plot P(K) for full N = 300 population
-subplot(2,3,1:2),  
-idxUnshuffle = zeros(size(idxShuffle));
-for i = 1:length(pcount)
-  idxUnshuffle(i) = find(idxShuffle==i);
-end
-plot(0:length(pcount)-1, pcount(idxUnshuffle), 'color', clrs(10,:), ...
-     'linewidth', 2.5)
-hold on
-plot(0:length(pcount)-1, pcount, 'k', 'linewidth', 2.5)
-axis([0,length(pcount)-1, 0, 1.05*max(pcount)]);
-set(gca, 'TickDir', 'out'), box off
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'XTick', [0, 100,200,300]);
-set(gca, 'YTick', [0, 0.1, 0.2])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-xlabel('population spike count'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('probability', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
-       'FontWeight', fontWeight )
-
-% add what the P(K) actually look like for randomly subsampled n < 300
-subplot(2,3,4:5),
-for i = 1:15, 
-    plot(0:size(pcounts,1)-1, squeeze(pcounts(:,i,:)), ...
-         'color', clrs(19-i,:)); 
-    hold on, 
-end
-axis([0,length(pcount)-1, 0, 1.05*max(pcounts(:))]);
-set(gca, 'TickDir', 'out'), box off
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'XTick', [0, 100,200,300]);
-set(gca, 'YTick', [0, 0.04, 0.08])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-xlabel('population spike count'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('probability', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
-       'FontWeight', fontWeight )
-
-% add heat traces computed from above subsampled populations
-subplot(2,3,[3,6]), 
-lgnd = cell(15,1);
-for i = 15:-1:1
-    plot(-1, 0, 'color', clrs(19-i, :), 'linewidth', 1.5); 
-    hold on
-    lgnd{i} = ['n = ', num2str(Ns(16-i))];
-end
-for i = 1:15, 
-    plot(Ts, squeeze(cN(i,:,:)), 'color', clrs(19-i,:)); 
-    hold on, 
-end
-line([1,1], [0, 1.05*max(cN(:))], 'linestyle', '--', 'color', 'k', ...
-     'linewidth', axesThickness)
-axis([min(Ts), max(Ts), 0.95*min(cN(:)), 1.05*max(cN(:))]);
-set(gca, 'TickDir', 'out'), box off
-set(gca, 'Linewidth', axesThickness)
-set(gca, 'XTick', [0.7, 1, 1.2]);
-set(gca, 'YTick', [0, 5, 10])
-box off, set(gca, 'TickDir' ,'out')
-legend(lgnd, 'Location', 'Northwest'), legend boxoff
-set(gca, 'FontSize', fontSize)
-xlabel('temperature'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('specific heat', 'FontName', fontName, ...
-       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-
-clearvars -except figureS3 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
-
-%% Supplementary figure: c(T) traces for small simulation up to n = 300, 
-%                        with and without beta-bin. approx.
-
-figureS4 = figure('Tag', 'figS4', 'units','centimeters','position',[0,0,19,11]);
-
-lgnd = cell(15,1);
-clrs = copper(15);
-clrs = clrs(end:-1:1,:);
-
-subplot(1,2,1)
-load('fig_data/figS4_data.mat')
-for i = 15:-1:1, 
-    plot(Ts, mean(squeeze(cN(i,:,:)),1), 'color', clrs(i,:), ...
-         'linewidth', 2.5), hold on; 
-    lgnd{16-i} = ['n = ', num2str(Ns(i))];
-end
-for i = 15:-1:1, 
-    plot(Ts, squeeze(cN(i,:,:))', 'linestyle', '-', 'linewidth', 1, ...
-         'color', clrs(i,:)), 
-end
-
-line([1,1], [0, 1.05*max(cN(:))], 'linestyle', '--', 'color', 'k', ...
-     'linewidth', axesThickness)
-set(gca, 'Linewidth', axesThickness)
-axis([0.95,1.2,0.95*min(cN(:)), 1.05*max(cN(:))]); %axis autoy
-set(gca, 'XTick', [1, 1.1, 1.2, 2]);
-set(gca, 'YTick', [5,10])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-xlabel('temperature'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('specific heat', 'FontName', fontName, ...
-       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-
-subplot(1,2,2)
-clear cN Ns Ts
-load('fig_data/figS4_data_raw.mat')
-for i = 15:-1:1, 
-    plot(Ts, mean(squeeze(cN(i,:,:)),1), 'color', clrs(i,:), ...
-         'linewidth', 2.5), hold on; 
-    lgnd{16-i} = ['n = ', num2str(Ns(i))];
-end
-for i = 15:-1:1, 
-    plot(Ts, squeeze(cN(i,:,:))', 'linestyle', '-', 'linewidth', 1, ...
-         'color', clrs(i,:)), 
-end
-
-line([1,1], [0, 1.05*max(cN(:))], 'linestyle', '--', 'color', 'k', ...
-     'linewidth', axesThickness)
-set(gca, 'Linewidth', axesThickness)
-axis([0.95,1.2,0.95*min(cN(:)), 1.05*max(cN(:))]); %axis autoy
-set(gca, 'XTick', [1, 1.1, 1.2, 2]);
-set(gca, 'YTick', [5,10])
-box off, set(gca, 'TickDir' ,'out')
-set(gca, 'FontSize', fontSize)
-legend(lgnd); legend boxoff
-xlabel('temperature'   , 'FontName', fontName, ...
-       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
-ylabel('specific heat', 'FontName', fontName, ...
-       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
-
-clearvars -except figureS4 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
-
 %% Supplementart figure: Key population statistics (FR, covs, P(K)) 
 %                        as function of temperature
 
@@ -730,6 +590,482 @@ for i = 1:31
 end
 
 clearvars -except figureS9 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
+
+
+%%
+
+%% supplementary figure: beta-bin parameter and fits to other peoples' data
+
+figure;
+
+subplot(1,3,1)
+clrs = [254,153,41;
+236,112,20;
+204, 76,2;      % colors for inidivual traces.
+153,52,4;
+102,37,6;
+0,0,0]/255;
+ifAddGaussianFits = false;
+
+for i = 1:2:5
+  semilogy(-1, 0, 's-', 'color', clrs(i,:), 'linewidth',1.5,'markerSize',3)
+  hold on;
+end
+legend('Okun et al. 2012', 'Tkacik et al. 2013', 'Tkacik et al. 2012')
+% start with Okun data (n=96. Watch out: not 96 neurons, but 96 tetrodes!)
+n = 96;
+data_1=load('../data/other_studies/figure_data/Okun_Counts.txt');
+ks = round(data_1(:,1));
+pcount = data_1(:,2); pcount = pcount/sum(pcount);
+mu1 =  (ks') * pcount;               mu2 = (ks').^2 * pcount;
+Z = ( n * (mu2/mu1 - mu1 -1)) + mu1;
+a = (n * mu1 - mu2) / Z;             b = (n - mu1) * (n - mu2/mu1) / Z;
+lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';
+logpcount = lognchoosek + betaln(a + (0:n), n + b - (0:n))' - betaln(a, b);
+
+[a2,b2] = fitBetabinML(pcount, n, 100000);
+logpcount2 = lognchoosek + betaln(a2 + (0:n), n + b2 - (0:n))' ...
+            - betaln(a2, b2);
+semilogy(data_1(:,1), pcount, 's-', 'color', clrs(1,:), ...
+         'linewidth', 1.5, 'markerSize', 1.5)
+hold on
+semilogy(data_1(:,1), pcount, 's', 'color', clrs(1,:), ...
+         'linewidth', 0.75, 'markerSize', 3)
+semilogy(0:n, exp(logpcount), '-', 'color', clrs(1,:), 'linewidth', 2.5)
+
+if ifAddGaussianFits
+ pars0 = [0;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ f = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut,~] = minFunc(fun, pars0, fitoptions);
+  [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut,n, mu1, mu2);
+  disp('desired and true E(K) and E(K^2)')
+  [mu1, Ex; mu2, Ex2],  pause; 
+  pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+  pcount_gauss = pcount_gauss/sum(pcount_gauss);
+ semilogy(0:n, pcount_gauss, ':', 'color', clrs(1,:), 'linewidth', 2.5)
+end
+clear data_1 data_2 mu1 mu2 a b Z lognchoosek logpcount ks pcount
+
+% next add data from Tkacik et al. 2014
+n = 120;
+data_1=load('../data/other_studies/figure_data/Tkacik_2014_data.txt');
+ks = round(data_1(:,1));
+pcount = data_1(:,2); pcount = pcount/sum(pcount);
+mu1 =  (ks') * pcount;               mu2 = (ks').^2 * pcount;
+Z = ( n * (mu2/mu1 - mu1 -1)) + mu1;
+a = (n * mu1 - mu2) / Z;             b = (n - mu1) * (n - mu2/mu1) / Z;
+lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';
+logpcount = lognchoosek + betaln(a + (0:n), n + b - (0:n))' - betaln(a, b);
+
+[a2,b2] = fitBetabinML(pcount, n, 100000);
+logpcount2 = lognchoosek + betaln(a2 + (0:n), n + b2 - (0:n))' ...
+             - betaln(a2, b2);
+semilogy(data_1(:,1), pcount, 's-', 'color', clrs(3,:), ...
+         'linewidth', 1.5, 'markerSize', 1.5)
+hold on
+semilogy(data_1(:,1), pcount, 's', 'color', clrs(3,:), ...
+         'linewidth', 0.75, 'markerSize', 3)
+semilogy(0:n, exp(logpcount), '-', 'color', clrs(3,:), 'linewidth', 2.5)
+
+if ifAddGaussianFits
+ pars0 = [20;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ fun = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut,~] = minFunc(fun, pars0, fitoptions);
+ [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut,n, mu1, mu2);
+ disp('desired and true E(K) and E(K^2)')
+  [mu1, Ex; mu2, Ex2],  pause; 
+ pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+ pcount_gauss = pcount_gauss/sum(pcount_gauss);
+ semilogy(0:n, pcount_gauss, ':', 'color', clrs(3,:), 'linewidth', 2.5)
+end
+clear data_1 data_2 mu1 mu2 a b Z lognchoosek logpcount ks pcount
+
+% last, add data from Tkacik et al., 2012 
+% ('The simplest maximum entropy model for...')
+n = 40;
+data_1=load('../data/other_studies/figure_data/Tkacik_Real_Trace.mat');
+data_1=data_1.Tkacik_real_trace;
+ks = round(data_1(:,1));
+pcount = data_1(:,2); pcount = pcount/sum(pcount);
+mu1 =  (ks') * pcount;               mu2 = (ks').^2 * pcount;
+Z = ( n * (mu2/mu1 - mu1 -1)) + mu1;
+a = (n * mu1 - mu2) / Z;             b = (n - mu1) * (n - mu2/mu1) / Z;
+lognchoosek = (gammaln(n+1) - gammaln((0:n)+1) - gammaln(n+1-(0:n)))';
+logpcount = lognchoosek + betaln(a + (0:n), n + b - (0:n))' - betaln(a, b);
+[a2,b2] = fitBetabinML(pcount, n, 100000);
+logpcount2 = lognchoosek + betaln(a2 + (0:n), n + b2 - (0:n))' ...
+             - betaln(a2, b2);
+
+semilogy(data_1(:,1), pcount, 's-', 'color', clrs(5,:), ...
+         'linewidth', 1.5, 'markerSize', 1.5)
+hold on
+semilogy(data_1(:,1), pcount, 's', 'color', clrs(5,:), ...
+         'linewidth', 0.75, 'markerSize', 3)
+semilogy(0:n, exp(logpcount), '-', 'color', clrs(5,:), 'linewidth', 2.5)
+
+if ifAddGaussianFits
+ pars0 = [20;0];
+ fitoptions = [];
+ fitoptions.DerivativeCheck = 'on';
+ fun = @(pars) computeGradient2oMaxEnt(pars, n, mu1, mu2);
+ [parsOut,~] = minFunc(fun, pars0, fitoptions);
+ [f,g,Ex,Ex2] = computeGradient2oMaxEnt(parsOut,n, mu1, mu2);
+ disp('desired and true E(K) and E(K^2)')
+  [mu1, Ex; mu2, Ex2],  pause; 
+ pcount_gauss = exp(parsOut(1) * (0:n) + parsOut(2) * (0:n).^2);
+ pcount_gauss = pcount_gauss/sum(pcount_gauss);
+semilogy(0:n, pcount_gauss, ':', 'color', clrs(5,:), 'linewidth', 2.5)
+end
+clear data_1 data_2 mu1 mu2 a b Z lognchoosek logpcount ks pcount
+
+set(gca, 'FontSize', fontSize)  
+xlabel('population spike count', 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
+ylabel('frequency', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+       'FontWeight', fontWeight )
+axis([0, 61, 1.1*10^(-4), 1]); 
+box off, set(gca, 'TickDir' ,'out')
+
+subplot(1,3,2)
+
+load('fig_data/fig2_data_alphabeta.mat')
+
+h = area(Ns, [mean(a,2)' - sqrt(var(a')); 2*sqrt(var(a'))]'); 
+h(2).FaceColor = clrs(1,:); h(1).FaceColor = [1,1,1];
+h(2).EdgeColor = [1,1,1]; h(1).EdgeColor = [1,1,1];
+hold on
+plot(Ns, mean(a,2), 'color', clrs(5,:), 'linewidth', 3),
+hold off
+set(gca, 'TickDir', 'out')
+set(gca, 'Xtick', [])
+set(gca, 'Ytick', [0.35,0.4,0.45])
+box off
+set(gca, 'Linewidth', axesThickness)
+axis([Ns(1), Ns(end), 0.32,0.49])
+set(gca, 'FontSize', fontSize)
+ylabel('\alpha', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
+    'FontWeight', fontWeight )
+
+subplot(1,3,3)
+
+h = area(Ns, [mean(b,2)' - sqrt(var(b')); 2*sqrt(var(b'))]'); 
+h(2).FaceColor = clrs(1,:); h(1).FaceColor = [1,1,1];
+h(2).EdgeColor = [1,1,1]; h(1).EdgeColor = [1,1,1];
+hold on
+plot(Ns, mean(b,2), 'color', clrs(5,:), 'linewidth', 3)
+set(gca, 'TickDir', 'out')
+set(gca, 'Xtick', [20, 160, 300])
+set(gca, 'Ytick', [11,13,15])
+box off
+set(gca, 'Linewidth', axesThickness)
+axis([Ns(1), Ns(end), 10.8,15.2])
+set(gca, 'FontSize', fontSize)
+xlabel('population size','FontName',fontName,'FontSize',fontSizeXlabel, ...
+    'FontWeight', fontWeight )
+ylabel('\beta', 'FontName',fontName,'FontSize',fontSizeYlabel,...
+    'FontWeight', fontWeight )
+
+
+%% Supplementary figure: c(T) traces for small simulation up to n = 300, 
+%                        with and without beta-bin. approx.
+
+figureS4 = figure('Tag', 'figS4', 'units','centimeters','position',[0,0,19,11]);
+
+lgnd = cell(15,1);
+clrs = copper(15);
+clrs = clrs(end:-1:1,:);
+
+subplot(1,2,1)
+load('fig_data/figS4_data.mat')
+for i = 15:-1:1, 
+    plot(Ts, mean(squeeze(cN(i,:,:)),1), 'color', clrs(i,:), ...
+         'linewidth', 2.5), hold on; 
+    lgnd{16-i} = ['n = ', num2str(Ns(i))];
+end
+for i = 15:-1:1, 
+    plot(Ts, squeeze(cN(i,:,:))', 'linestyle', '-', 'linewidth', 1, ...
+         'color', clrs(i,:)), 
+end
+
+line([1,1], [0, 1.05*max(cN(:))], 'linestyle', '--', 'color', 'k', ...
+     'linewidth', axesThickness)
+set(gca, 'Linewidth', axesThickness)
+axis([0.95,1.2,0.95*min(cN(:)), 1.05*max(cN(:))]); %axis autoy
+set(gca, 'XTick', [1, 1.1, 1.2, 2]);
+set(gca, 'YTick', [5,10])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('temperature'   , 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
+ylabel('specific heat', 'FontName', fontName, ...
+       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
+
+subplot(1,2,2)
+clear cN Ns Ts
+load('fig_data/figS4_data_raw.mat')
+for i = 15:-1:1, 
+    plot(Ts, mean(squeeze(cN(i,:,:)),1), 'color', clrs(i,:), ...
+         'linewidth', 2.5), hold on; 
+    lgnd{16-i} = ['n = ', num2str(Ns(i))];
+end
+for i = 15:-1:1, 
+    plot(Ts, squeeze(cN(i,:,:))', 'linestyle', '-', 'linewidth', 1, ...
+         'color', clrs(i,:)), 
+end
+
+line([1,1], [0, 1.05*max(cN(:))], 'linestyle', '--', 'color', 'k', ...
+     'linewidth', axesThickness)
+set(gca, 'Linewidth', axesThickness)
+axis([0.95,1.2,0.95*min(cN(:)), 1.05*max(cN(:))]); %axis autoy
+set(gca, 'XTick', [1, 1.1, 1.2, 2]);
+set(gca, 'YTick', [5,10])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+legend(lgnd); legend boxoff
+xlabel('temperature'   , 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
+ylabel('specific heat', 'FontName', fontName, ...
+       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
+
+clearvars -except figureS4 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
+
+
+
+%% supplementary figure: randomized P(K) and retained criticality
+figureS3 = figure('Tag', 'figS3', 'units','centimeters','position', ...
+                  [0,0,19,11]);
+load('fig_data/figS3_data_shuffle.mat')
+
+clrs = copper(18);
+
+% plot P(K) for full N = 300 population
+subplot(2,3,1:2),  
+idxUnshuffle = zeros(size(idxShuffle));
+for i = 1:length(pcount)
+  idxUnshuffle(i) = find(idxShuffle==i);
+end
+plot(0:length(pcount)-1, pcount(idxUnshuffle), 'color', clrs(10,:), ...
+     'linewidth', 2.5)
+hold on
+plot(0:length(pcount)-1, pcount, 'k', 'linewidth', 2.5)
+axis([0,length(pcount)-1, 0, 1.05*max(pcount)]);
+set(gca, 'TickDir', 'out'), box off
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'XTick', [0, 100,200,300]);
+set(gca, 'YTick', [0, 0.1, 0.2])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('population spike count'   , 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
+ylabel('probability', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
+       'FontWeight', fontWeight )
+
+% add what the P(K) actually look like for randomly subsampled n < 300
+subplot(2,3,4:5),
+for i = 1:15, 
+    plot(0:size(pcounts,1)-1, squeeze(pcounts(:,i,:)), ...
+         'color', clrs(19-i,:)); 
+    hold on, 
+end
+axis([0,length(pcount)-1, 0, 1.05*max(pcounts(:))]);
+set(gca, 'TickDir', 'out'), box off
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'XTick', [0, 100,200,300]);
+set(gca, 'YTick', [0, 0.04, 0.08])
+box off, set(gca, 'TickDir' ,'out')
+set(gca, 'FontSize', fontSize)
+xlabel('population spike count'   , 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
+ylabel('probability', 'FontName', fontName, 'FontSize', fontSizeYlabel, ...
+       'FontWeight', fontWeight )
+
+% add heat traces computed from above subsampled populations
+subplot(2,3,[3,6]), 
+lgnd = cell(15,1);
+for i = 15:-1:1
+    plot(-1, 0, 'color', clrs(19-i, :), 'linewidth', 1.5); 
+    hold on
+    lgnd{i} = ['n = ', num2str(Ns(16-i))];
+end
+for i = 1:15, 
+    plot(Ts, squeeze(cN(i,:,:)), 'color', clrs(19-i,:)); 
+    hold on, 
+end
+line([1,1], [0, 1.05*max(cN(:))], 'linestyle', '--', 'color', 'k', ...
+     'linewidth', axesThickness)
+axis([min(Ts), max(Ts), 0.95*min(cN(:)), 1.05*max(cN(:))]);
+set(gca, 'TickDir', 'out'), box off
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'XTick', [0.7, 1, 1.2]);
+set(gca, 'YTick', [0, 5, 10])
+box off, set(gca, 'TickDir' ,'out')
+legend(lgnd, 'Location', 'Northwest'), legend boxoff
+set(gca, 'FontSize', fontSize)
+xlabel('temperature'   , 'FontName', fontName, ...
+       'FontSize', fontSizeXlabel, 'FontWeight', fontWeight ) 
+ylabel('specific heat', 'FontName', fontName, ...
+       'FontSize', fontSizeYlabel, 'FontWeight', fontWeight )
+
+clearvars -except figureS3 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
+
+%% Supplementary figure: behavior of variance of mean correlation for 
+%                        randomly subsampled populations
+
+N = 100; % full population size 
+% compute correlation matrix
+
+% double exponential drop-off
+sigma2 = 1/8;    % given above numSamples, 
+scale  = 0.2527; % works out empirically to give rho = 0.05 
+f = @(x) scale * exp(-(1/sigma2* x).^2);
+Sigma = f(ones(N,1)*(1:N)/N - (ones(N,1)/N*(1:N))');
+Sigma(logical(diag(ones(N,1)))) = 1;
+
+% random
+%Sigma = randn(N,N) + 0.5;
+%Sigma = (Sigma + Sigma')/2;
+
+% data
+% idxD = 2;
+% load('../results/K_pairwise_final/idxSubsamples_lin')
+% switch idxD
+%     case 1
+%         load('../data/RGC_sim_cb.mat')
+%     case 2
+%         load('../data/RGC_sim_nat.mat')
+%     case 3
+%         load('../data/RGC_sim_fff.mat')        
+% end
+% X = zeros(size(output,1)*size(output,2), N);
+% for i = 1:N, tmp = output(:,:,idxSubsamples{N/10}(i,1)); X(:,i) = tmp(:); end
+% Sigma = corrcoef(X);
+
+%Sigma = 0.05 * ones(N,N)
+
+figure; 
+subplot(1,2,1)
+imagesc(Sigma-diag(diag(Sigma))); 
+set(gca, 'XTick', 20:20:100)
+set(gca, 'YTick', 20:20:100)
+colorbar
+
+% *very* basic approach to computing the correlation matrix summary stats
+S2 = 0; S3 = 0; S4 = 0; 
+c2 = 0; c3 = 0; c4 = 0;
+for j = N:-1:1
+    disp(num2str(j))
+    for i = 1:(j-1)
+        S2 = S2 + Sigma(i,j)^2;
+        c2 = c2 + 1;
+        
+        tmp = 0;
+        for l = 1:(i-1)
+            if l ~= j
+                tmp = tmp + Sigma(i,l);
+                c3 = c3 + 1;
+            end
+        end
+        for k = 1:(j-1)
+            if k ~= i
+                tmp = tmp + Sigma(k,j);
+                c3 = c3 + 1;            
+            end
+        end
+        S3 = S3 + Sigma(i,j) * tmp;
+    end
+end
+
+m = mean(Sigma(logical(triu(ones(N),1))));
+m2 = S2/c2;
+m3 = S3/c3;
+V  = m2 - m^2;
+disp('sum element counts')
+disp('[S2, S3]')
+disp(num2str([c2, c3]))
+
+disp('mean statistics')
+disp('[m2, m3]')
+disp(num2str([m2, m3]))
+
+idxRep = 100000;    % number of subpops for each size   
+ns = 10:10:N; % sizes of subpopulations that are explored
+
+idxNr = cell(length(ns),1); % index of subpops ('r' for random, 'l' for 
+idxNl = cell(length(ns),1); % linear sampling), should be fixed somewhere
+for n = 1:length(ns)
+    idxNr{n} = zeros(ns(n), idxRep);
+    idxNl{n} = zeros(ns(n), idxRep);
+    for i = 1:idxRep
+        idxNr{n}(:,i) = randsample(N, ns(n));
+        idxNl{n}(:,i) = 1:ns(n);
+    end                                               
+end
+
+tracen = zeros(length(ns),2); 
+  stdn = zeros(length(ns),2);
+disp('subsampling principal submatrices')
+for n = 1:length(ns)
+    tmp = zeros(idxRep,1);
+    for i = 1:idxRep
+        M = Sigma(idxNr{n}(:,i),idxNr{n}(:,i));
+        tmp(i) = mean(M(~logical(diag(ones(ns(n),1)))));
+    end
+    tracen(n,1) = mean(tmp);
+    stdn(n,1)   = std(tmp);
+    for i = 1:idxRep
+        M = Sigma(idxNl{n}(:,i),idxNl{n}(:,i));
+        tmp(i) = mean(M(~logical(diag(ones(ns(n),1)))));
+    end
+    tracen(n,2) = mean(tmp);
+    stdn(n,2)   = std(tmp);
+end
+
+n = 2:N-1;
+g2 = @(n) (1 - N*(N-1)./(n.*(n-1))) * 6 / (N-3) / (N-2);
+g1 = @(n) (1 -   (N-1)./    (n-1) ) * 4 / (N-3);  
+varn = g2(n) .* (V - 4/3*(N-2)/(N-1)*m2)  ...
+    +  g1(n) .* ((N+1)/(N-1) *S2/c2 - N/(N-2) * V  -(n-2)./n.*m3);  
+
+d = 4/(N-3) * (m^2 - m3) - 2/(N-2)/(N-3)*V;
+e = 4*(N+1)/(N-3) * (m3-m^2) + 8/(N-3)/(N-2)*V;
+f = 8*N/(N-3)*(m^2 - m3) + 2*N*(N-5)/(N-2)/(N-3)*V;
+varn2 = d + (e+f./n)./(n-1);
+
+% check special case
+Sig = Sigma(1:N, 1:N);
+disp('difference between var[\rho_{ij}] and var[\rho_2]')
+disp(varn(1) - var(Sig(logical(triu(ones(N,N),1)))))
+disp(varn2(1) - var(Sig(logical(triu(ones(N,N),1)))))
+
+% plot full trace of n's 
+max(abs(varn-varn2))
+subplot(1,2,2)
+semilogy(n, varn2, 'b-', 'linewidth', 2)
+hold on; 
+semilogy([2,ns(1:end-1)], [var(Sig(logical(triu(ones(N,N),1)))); stdn(1:end-1,1).^2], 'ko')
+semilogy(n, 2*varn2(1)./n, 'k-', 'linewidth', 1.5)
+semilogy(n, 2*varn2(1)./(n.*(n-1)), 'k--', 'linewidth', 1.5)
+
+legend('prediction', 'samples', '1/n', '1/n^2')
+ylabel('var[\rho_n]')
+xlabel('n')
+
+subplot(1,2,1)
+loglog(n, varn2, 'b-')
+hold on; 
+loglog([2,ns(1:end-1)], [var(Sig(logical(triu(ones(N,N),1)))); stdn(1:end-1,1).^2], 'ko')
+loglog(n, 2*varn(1)./(n.*(n-1)), 'r-', 'linewidth', 1.5)
+loglog(n, 2*varn(1)./n, 'k-', 'linewidth', 1.5)
+loglog(n, 4*varn(1)./n.^2, 'k--', 'linewidth', 1.5)
+loglog(n, 8*varn(1)./n.^3, 'k--', 'linewidth', 1)
+semilogy(n, varn, 'c--')
+legend('prediction', 'empirical', 'ind. pred.', 'ind. w. repl.', 'ind. without repl.', '1/n', '1/n^2', '1/n^3')
+title('var[\rho_n]')
+xlabel('n')
 
 
 %% Supplementary figure: spatially structured sampling for K-pairwise model
@@ -943,162 +1279,4 @@ xlabel('\alpha')
 ylabel('c(T=1) / n')
 box off
 title(' c(T=1)/n  prediction for flat model ')
-
-
-%% Supplementary figure: behavior of variance of mean correlation for 
-%                        randomly subsampled populations
-
-N = 100; % full population size 
-% compute correlation matrix
-
-% double exponential drop-off
-sigma2 = 1/8;    % given above numSamples, 
-scale  = 0.2527; % works out empirically to give rho = 0.05 
-f = @(x) scale * exp(-(1/sigma2* x).^2);
-Sigma = f(ones(N,1)*(1:N)/N - (ones(N,1)/N*(1:N))');
-Sigma(logical(diag(ones(N,1)))) = 1;
-
-% random
-%Sigma = randn(N,N) + 0.5;
-%Sigma = (Sigma + Sigma')/2;
-
-% data
-% idxD = 2;
-% load('../results/K_pairwise_final/idxSubsamples_lin')
-% switch idxD
-%     case 1
-%         load('../data/RGC_sim_cb.mat')
-%     case 2
-%         load('../data/RGC_sim_nat.mat')
-%     case 3
-%         load('../data/RGC_sim_fff.mat')        
-% end
-% X = zeros(size(output,1)*size(output,2), N);
-% for i = 1:N, tmp = output(:,:,idxSubsamples{N/10}(i,1)); X(:,i) = tmp(:); end
-% Sigma = corrcoef(X);
-
-%Sigma = 0.05 * ones(N,N)
-
-figure; 
-subplot(1,2,1)
-imagesc(Sigma-diag(diag(Sigma))); 
-set(gca, 'XTick', 20:20:100)
-set(gca, 'YTick', 20:20:100)
-colorbar
-
-% *very* basic approach to computing the correlation matrix summary stats
-S2 = 0; S3 = 0; S4 = 0; 
-c2 = 0; c3 = 0; c4 = 0;
-for j = N:-1:1
-    disp(num2str(j))
-    for i = 1:(j-1)
-        S2 = S2 + Sigma(i,j)^2;
-        c2 = c2 + 1;
-        
-        tmp = 0;
-        for l = 1:(i-1)
-            if l ~= j
-                tmp = tmp + Sigma(i,l);
-                c3 = c3 + 1;
-            end
-        end
-        for k = 1:(j-1)
-            if k ~= i
-                tmp = tmp + Sigma(k,j);
-                c3 = c3 + 1;            
-            end
-        end
-        S3 = S3 + Sigma(i,j) * tmp;
-    end
-end
-
-m = mean(Sigma(logical(triu(ones(N),1))));
-m2 = S2/c2;
-m3 = S3/c3;
-V  = m2 - m^2;
-disp('sum element counts')
-disp('[S2, S3]')
-disp(num2str([c2, c3]))
-
-disp('mean statistics')
-disp('[m2, m3]')
-disp(num2str([m2, m3]))
-
-%%
-idxRep = 100000;    % number of subpops for each size   
-ns = 10:10:N; % sizes of subpopulations that are explored
-
-idxNr = cell(length(ns),1); % index of subpops ('r' for random, 'l' for 
-idxNl = cell(length(ns),1); % linear sampling), should be fixed somewhere
-for n = 1:length(ns)
-    idxNr{n} = zeros(ns(n), idxRep);
-    idxNl{n} = zeros(ns(n), idxRep);
-    for i = 1:idxRep
-        idxNr{n}(:,i) = randsample(N, ns(n));
-        idxNl{n}(:,i) = 1:ns(n);
-    end                                               
-end
-
-tracen = zeros(length(ns),2); 
-  stdn = zeros(length(ns),2);
-disp('subsampling principal submatrices')
-for n = 1:length(ns)
-    tmp = zeros(idxRep,1);
-    for i = 1:idxRep
-        M = Sigma(idxNr{n}(:,i),idxNr{n}(:,i));
-        tmp(i) = mean(M(~logical(diag(ones(ns(n),1)))));
-    end
-    tracen(n,1) = mean(tmp);
-    stdn(n,1)   = std(tmp);
-    for i = 1:idxRep
-        M = Sigma(idxNl{n}(:,i),idxNl{n}(:,i));
-        tmp(i) = mean(M(~logical(diag(ones(ns(n),1)))));
-    end
-    tracen(n,2) = mean(tmp);
-    stdn(n,2)   = std(tmp);
-end
-
-n = 2:N-1;
-g2 = @(n) (1 - N*(N-1)./(n.*(n-1))) * 6 / (N-3) / (N-2);
-g1 = @(n) (1 -   (N-1)./    (n-1) ) * 4 / (N-3);  
-varn = g2(n) .* (V - 4/3*(N-2)/(N-1)*m2)  ...
-    +  g1(n) .* ((N+1)/(N-1) *S2/c2 - N/(N-2) * V  -(n-2)./n.*m3);  
-
-d = 4/(N-3) * (m^2 - m3) - 2/(N-2)/(N-3)*V;
-e = 4*(N+1)/(N-3) * (m3-m^2) + 8/(N-3)/(N-2)*V;
-f = 8*N/(N-3)*(m^2 - m3) + 2*N*(N-5)/(N-2)/(N-3)*V;
-varn2 = d + (e+f./n)./(n-1);
-
-% check special case
-Sig = Sigma(1:N, 1:N);
-disp('difference between var[\rho_{ij}] and var[\rho_2]')
-disp(varn(1) - var(Sig(logical(triu(ones(N,N),1)))))
-disp(varn2(1) - var(Sig(logical(triu(ones(N,N),1)))))
-
-% plot full trace of n's 
-max(abs(varn-varn2))
-subplot(1,2,2)
-semilogy(n, varn2, 'b-', 'linewidth', 2)
-hold on; 
-semilogy([2,ns(1:end-1)], [var(Sig(logical(triu(ones(N,N),1)))); stdn(1:end-1,1).^2], 'ko')
-semilogy(n, 2*varn2(1)./n, 'k-', 'linewidth', 1.5)
-semilogy(n, 2*varn2(1)./(n.*(n-1)), 'k--', 'linewidth', 1.5)
-
-legend('prediction', 'samples', '1/n', '1/n^2')
-ylabel('var[\rho_n]')
-xlabel('n')
-
-subplot(1,2,1)
-loglog(n, varn2, 'b-')
-hold on; 
-loglog([2,ns(1:end-1)], [var(Sig(logical(triu(ones(N,N),1)))); stdn(1:end-1,1).^2], 'ko')
-loglog(n, 2*varn(1)./(n.*(n-1)), 'r-', 'linewidth', 1.5)
-loglog(n, 2*varn(1)./n, 'k-', 'linewidth', 1.5)
-loglog(n, 4*varn(1)./n.^2, 'k--', 'linewidth', 1.5)
-loglog(n, 8*varn(1)./n.^3, 'k--', 'linewidth', 1)
-semilogy(n, varn, 'c--')
-legend('prediction', 'empirical', 'ind. pred.', 'ind. w. repl.', 'ind. without repl.', '1/n', '1/n^2', '1/n^3')
-title('var[\rho_n]')
-xlabel('n')
-
 
