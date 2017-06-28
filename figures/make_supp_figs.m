@@ -796,3 +796,179 @@ end
 clearvars -except figureS9 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
 
+%% spatially structured sampling for the full K-pairwise model
+% Results are stored in '_lin.mat' files under K_pairwise_final/ 
+% We compare with the results for randomly subsampled subpopulations
+
+% Below code produces two figures: The traces, and insets giving the values
+% c(T=1) and max{c(T)} as function of population size
+
+data_path = '../results/K_pairwise_final/';
+stypes = {'FFF', 'NAT', 'CB'};
+lgnd = {'full-field flicker', 'natural stimulus', 'checkerboard stimulus'};
+for i = 1:length(stypes)
+    
+    stype = stypes{i};
+
+    subplot(3, 3, 3*i-2);
+
+    load([data_path, 'heat_traces_', lower(stype), '.mat'])
+    clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;    
+    for n = 2:2:12, 
+        plot(Ts, squeeze(cN(n, :, :)), 'color', [0.7,0.7,0.7], 'linewidth', 2);
+        hold on
+    end
+    
+    subplot(3, 3, 3*i-1);
+    plot(20:20:120, squeeze(cN(2:2:12, :, 6))', 'color', [0.7,0.7,0.7])
+    hold on
+
+    subplot(3, 3, 3*i);
+    tmp = zeros(12, size(cN, 2));
+    for n = 2:2:12,                 
+        tmp(n, :) = squeeze(max(cN(n,:,:),[],3));
+    end
+    plot(20:20:120, tmp(2:2:12,:), 'color', [0.7,0.7,0.7])
+    hold on
+    set(gca,'XTick', 20:40:100)
+    
+
+    load([data_path, 'heat_traces_', lower(stype), '_lin.mat'])    
+    subplot(3, 3, 3*i-2);
+    for n = 2:2:12, 
+        plot(Ts, squeeze(varE(n, :, :))/(10*n), '-', 'color', clrs(n/2,:));
+        hold on
+    end
+    M = 1.1 * max([max(cN(:)), max(varE(:)/120)]);
+    line([1,1], [0, M], 'color', 0.3 * [1,1,1,], 'lineStyle', '--')
+    axis([0.8, 2, 0, M]); 
+    box off
+    set(gca, 'TickDir', 'out')
+    xlabel('T')
+    ylabel('c')
+
+    subplot(3, 3, 3*i-1);
+    plot(20:20:120, bsxfun(@rdivide, squeeze(varE(2:2:12, :, 6)),(20:20:120)'), ...
+        '-', 'linewidth', 1.5, 'color','k')
+    for n = 2:2:12, 
+        plot(10*n, varE(n, :, 6)/(10*n), 's', 'color', clrs(n/2,:), ...
+             'markerSize', 6, 'linewidth', 2, 'MarkerFaceColor', clrs(n/2,:));
+    end
+    axis([18, 120, 0, 1]); axis autoy
+    set(gca,'XTick', 40:40:120)
+    xlabel('n')
+    ylabel('c(T=1)')
+    box off
+    set(gca, 'TickDir', 'out')
+    title(lower(lgnd{i}))
+    
+    subplot(3, 3, 3*i);
+    tmp = zeros(12, size(varE, 2));
+    for n = 2:2:12,                 
+        tmp(n, :) = squeeze(max(varE(n,:,:)/(10*n),[],3));
+    end
+    plot(20:20:120, tmp(2:2:12, :), ...
+        '-', 'linewidth', 1.5, 'color','k')
+    for n = 2:2:12, 
+        plot(10*n, tmp(n,:), 's', 'color', clrs(n/2,:), ...
+             'markerSize', 6, 'linewidth', 2, 'MarkerFaceColor', clrs(n/2,:));
+    end
+    axis([18, 120, 0, M]); axis autoy
+    set(gca,'XTick', 40:40:120)
+    xlabel('n')
+    ylabel('c(T*)')
+    box off
+    set(gca, 'TickDir', 'out')
+    
+end
+
+data_path = '../results/K_pairwise_final/';
+stypes = { 'CB', 'NAT', 'FFF'};
+lgnd = {'checkerboard stimulus', 'natural stimulus', 'full-field flicker'};
+for i = 1:length(stypes)
+    
+    stype = stypes{i};
+
+    load([data_path, 'heat_traces_', lower(stype), '.mat'])
+    clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;
+    figure(1)
+    subplot(1, 3, i);
+    for n = 2:2:12, 
+        plot(Ts, squeeze(cN(n, :, :)), 'color', [0.7,0.7,0.7], ...,
+            'linewidth', 1);
+        hold on
+%         plot(Ts, squeeze(cN(n, :, :)), 'x', 'color', clrs(n/2,:), ...
+%             'linewidth', 0.5, 'markerSize', 3, 'MarkerFaceColor', clrs(n/2,:));
+    end
+    
+    figure(2)
+    subplot(3,2, 2*i-1);
+    plot(20:20:120, squeeze(cN(2:2:12, :, 6))', 'color', [0.7,0.7,0.7])
+    hold on
+
+    subplot(3,2, 2*i);
+    tmp = zeros(12, size(cN, 2));
+    for n = 2:2:12,                 
+        tmp(n, :) = squeeze(max(cN(n,:,:),[],3));
+    end
+    plot(20:20:120, tmp(2:2:12,:), 'color', [0.7,0.7,0.7])
+    hold on
+    set(gca,'XTick', 20:40:100)
+    
+    
+    
+    load([data_path, 'heat_traces_', lower(stype), '_lin.mat'])    
+    figure(1)
+    subplot(1,3, i);
+    for n = 12:-2:2, 
+        plot(Ts, squeeze(varE(n, :, :))/(10*n), '-', 'color', clrs(n/2,:), 'linewidth', 2.5);
+        hold on
+    end
+    %M = 1.1 * max(max(bsxfun(@rdivide, squeeze(max(varE(2:2:12,:,:), [], 2)), (20:20:120)')));
+    M = 3.5;
+    line([1,1], [0, M], 'color', 0.3 * [1,1,1,], 'lineStyle', '--')
+    axis([0.8, 2, 0, M]); 
+    box off
+    set(gca, 'TickDir', 'out')
+    xlabel('T')
+    ylabel('c')
+    title(lgnd{i})
+
+    figure(2)
+    subplot(3,2, 2*i-1);
+    plot(20:20:120, bsxfun(@rdivide, squeeze(varE(2:2:12, :, 6)),(20:20:120)'), ...
+        '-', 'linewidth', 1.5, 'color','k')
+    for n = 2:2:12, 
+        plot(10*n, varE(n, :, 6)/(10*n), 's', 'color', clrs(n/2,:), ...
+             'markerSize', 6, 'linewidth', 2, 'MarkerFaceColor', clrs(n/2,:));
+    end
+    axis([18, 120, 0, 1]); axis autoy
+    set(gca,'XTick', 20:40:100)
+    xlabel('n')
+    ylabel('c(T=1)')
+    box off
+    set(gca, 'TickDir', 'out')
+    title(lower(lgnd{i}))
+    
+    subplot(3,2, 2*i);
+    tmp = zeros(12, size(varE, 2));
+    for n = 2:2:12,                 
+        tmp(n, :) = squeeze(max(varE(n,:,:)/(10*n),[],3));
+    end
+    plot(20:20:120, tmp(2:2:12, :), ...
+        '-', 'linewidth', 1.5, 'color','k')
+    for n = 2:2:12, 
+        plot(10*n, tmp(n,:), 's', 'color', clrs(n/2,:), ...
+             'markerSize', 6, 'linewidth', 2, 'MarkerFaceColor', clrs(n/2,:));
+    end
+    axis([18, 120, 0, M]); axis autoy
+    set(gca,'XTick', 20:40:100)
+    xlabel('n')
+    ylabel('c(T*)')
+    box off
+    set(gca, 'TickDir', 'out')
+    
+end
+
+
+
