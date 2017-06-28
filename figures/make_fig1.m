@@ -357,7 +357,7 @@ xlabel('pop. spike count'   , 'FontName', fontName, ...
 
 load('/home/mackelab/Desktop/Projects/Criticality/code/project_current/results/K_pairwise_final/lambda_nat.mat')
 load('/home/mackelab/Desktop/Projects/Criticality/results/EfxSimData.mat')
-load('/home/mackelab/Desktop/Projects/Criticality/code/project_current/figures/fig_data/fig1_data.mat')
+load('/home/mackelab/Desktop/Projects/Criticality/code/project_current/figures/fig_data/fig0_data.mat')
 
 % make sure we use our color-scheme again
 clrs = [254,153,41;236,112,20;204,76,2;153,52,4;102,37,6;0,0,0]/255;
