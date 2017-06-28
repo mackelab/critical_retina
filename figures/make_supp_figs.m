@@ -592,7 +592,77 @@ end
 clearvars -except figureS9 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
 
-%%
+%% 
+
+% used temperatures (slight annoyance with getting the ordering right)
+Ts = [ 0.8000, 0.8563, 0.9000, 0.9363, 0.9675, 0.9938, 1.0175, 1.0388, ...
+       1.0388, 1.0575, 1.0775, 1.0988, 1.1200, 1.1413, 1.1650, 1.1900, ...
+       1.2150, 1.2425, 1.2713, 1.3013, 1.3338, 1.3687, 1.4063, 1.4463, ...
+       1.4463, 1.4900, 1.5375, 1.5900, 1.6500, 1.7175, 1.7950, 1.8875, ...
+       2.0000];
+
+n = 100;
+idxRepets = [1];
+range = (100*Ts(1):100*Ts(end));
+clrs = jet( length(range) );
+
+c = zeros(31,1);
+
+figure
+subplot(1,2,1)
+
+for idxRepet = idxRepets 
+ for i = 1:31,
+  tmp = num2str(Ts(i)); tmp(tmp=='.')='_';    
+  load(['../results/method_validation/specific_heat_samples_long_runs/',...
+        'longRun',num2str(n),'idxRepet',num2str(idxRepet),'T',tmp,'.mat']) 
+  x = linspace( 0.001, (n/100)^2 * 12, size(MoE,2)-1);
+  tmp = MoE(2,1:end-1) - MoE(1,1:end-1).^2;
+  tmp = cumsum(tmp) ./ (1:length(tmp));
+  [~, idxClr] = min(abs( 100*Ts(i) - range));
+  semilogx(x, tmp/n, 'color', clrs(idxClr,:), 'linewidth', 0.75),
+  hold on
+  c(i) = mean(MoE(2,2:end-1)-MoE(1,2:end-1).^2)/n;
+ end
+end
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'XTick',      [ 1/64,   1/32,   1/16,   1/8,   ...
+                          1/4,   1/2,   1,  2,  4,  8])
+set(gca, 'XTickLabel', {'1/64', '1/32', '1/16', '1/8', ...
+                         '1/4', '1/2', '1','2','4','8'})
+set(gca, 'YTick', [0, 0.5, 1])
+set(gca, 'FontSize', fontSize)  
+xlabel('time [h]', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+    'FontWeight', fontWeight )
+ylabel('specific heat', 'FontName', fontName, ...
+    'FontSize', fontSizeXlabel, 'FontWeight', fontWeight )
+box off, set(gca, 'TickDir' ,'out')
+axis([1/60,12,0,1.45])
+hold off
+
+subplot(1,2,2)
+plot(Ts(1:31), c, 'color', 0.3*[1,1,1], 'linewidth', 1.25);
+hold on
+for idxRepet = idxRepets 
+ for i = 1:31,
+  tmp = num2str(Ts(i)); tmp(tmp=='.')='_';    
+  %load(['../results/method_validation/specific_heat_samples/VarEsn',...
+  %num2str(n), 'idxRepet', num2str(idxRepet), 'T', tmp, '.mat']) 
+  [~, idxClr] = min(abs( 100*Ts(i) - range));
+  plot(Ts(i), c(i,idxRepet), 's', 'color', clrs(idxClr,:), ...
+      'linewidth', 1.5, 'markerSize', 1.5)
+ end
+end
+hold off
+set(gca, 'Linewidth', axesThickness)
+set(gca, 'XTick', [1, 1.5, 2])
+set(gca, 'FontSize', fontSize)
+xlabel('temperature', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
+    'FontWeight', fontWeight )
+set(gca, 'YTick', [])
+box off, set(gca, 'TickDir' ,'out')
+axis([0.8, 2,0,1.45])
+
 
 %% supplementary figure: beta-bin parameter and fits to other peoples' data
 
