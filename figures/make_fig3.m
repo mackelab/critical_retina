@@ -505,8 +505,7 @@ ylabel('specific heat', 'FontName',fontName,'FontSize',fontSizeYlabel, ...
     'FontWeight', fontWeight )
 
 
-%% supplementary figure: peak specific heat as function of FR & correlation
-% this pannel recently moved to main paper, figure 3 (d-f)
+%% suppl. figure recently moved to main paper, figure 3 (d-f):
 
 Tmin = 0.5; 
 Tmax = 3.0;
