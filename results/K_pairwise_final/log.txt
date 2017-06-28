@@ -21,5 +21,8 @@ Efx_xyz gives         a 30x1 cell       (30 population sizes at 10 increment) of
 lambda_xyz gives      a 12x1 cell       ( 6 population sizes at 20 increment) of mx10 fitted parameter value matrices
 heat_traces_xyz gives a 12x10x31 matrix ( 6 population sizes at 20 increment, 10 random subpopulations, 31 temperatures) 
  
+The suffix '_lin' specifies 
+1. neuron IDs, 2. population statistics, 3. model parameters, 4. specific heat_traces 
+obtained for subpopulations of fixed sizes that were sampled with a spatially structured scheme (linearly from one side of the simulated retina patch to the other). 
 
 
