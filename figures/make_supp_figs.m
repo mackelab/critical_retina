@@ -14,7 +14,7 @@ fontSize       = 1 * 10;   fontSizeTitle  = 1 * 16;
 fontSizeXlabel = 1 * 10;   fontSizeYlabel = 1 * 11;
 fontSizeText   = 1 * 10;   fontSizeLegend = 1 * 11;
 
-%% supplementary figure 1: Advantage of Rao-Blackwellising 
+%% supplementary figure: Advantage of Rao-Blackwellising 
 
 % The following code serves to compute the RMSEs from 
 % long MCMC sampler runs that stored all the intermediate estimated 
@@ -22,72 +22,6 @@ fontSizeText   = 1 * 10;   fontSizeLegend = 1 * 11;
 % These files are large (>4GB) and hence not included in this github
 % repository. We provide them from the Mackelab dropbox account, instead, 
 % and for this code piece will load the pre-computed RMSEs directly.
-
-% timeRange = 1:65;     % select initial data segment for plotting, as the
-%                     % RMSEs of the MCMC estimates necessarily become
-%                     % the same towards the end (we're comparing against
-%                     % the average of the final estimates from boths 
-%                     % MCMC chains)
-% traces = cell(10,2,3);
-%  
-% for idxGroup = 1:3
-%   switch idxGroup
-%     case 1
-%       idxRange = 1:n;  
-%     case 2
-%       idxRange = (n+1) : ( n*(n+1)/2 ); % second moments / covariances        
-%     case 3
-%       idxRange = n*(n+3)/2+1 + (-n:0);  
-%   end
-%                          
-%   finals = zeros( n * (n+3) / 2 +1, 10, 2);
-%   MSEperc = zeros(10,3);
-% 
-%  for idxRepet = 1:10
-%   tmp = cell(2,1);
-%   for r = 1:2
-%    switch r
-%     case 1
-%       load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_RB100idxRepet', ...
-%              num2str(idxRepet), 'T1.mat'])
-%     case 2
-%       load(['../results/method_validation/feature_moments_test_rao_blackwell/checkRB_noRB100idxRepet', ...
-%              num2str(idxRepet), 'T1.mat'])
-%    end
-%    tmp{r} = Efy(:,2:end-1);
-%   
-%    fDescrJ = nchoosek(1:n,2)'; 
-%    covsy = tmp{r}((n+1):(n*(n+1)/2),:) - ...    % covariance as computed
-%           (tmp{r}(fDescrJ(1, :),:).* tmp{r}(fDescrJ(2, :),:)); % from Efx
-%    % now gives [firing rates; covariances; P(K)] over time 
-%    tmp{r}(n+(1:n*(n-1)/2),:) = covsy;  
-%    % moving average over time (i.e. tmp(:,t) holds MCMC estimate at time t)
-%    tmp{r} = bsxfun(@rdivide, cumsum(tmp{r},2), (1:size(tmp{r},2))); 
-%    % chain ends (for comparison with 'truth')
-%    finals(:, idxRepet, r) = tmp{r}(:,end);  
-%   end
-%   MSEperc(idxRepet,1) = mean( (finals(1:n, idxRepet, 1) ...
-%                              - finals(1:n, idxRepet, 2)).^2  ) / ...
-%                  mean( mean(finals(1:n, idxRepet, 1).^2) ...
-%                      + mean(finals(1:n, idxRepet, 2).^2));
-%   MSEperc(idxRepet,2) = mean( (finals(n+(1:n*(n-1)/2),idxRepet,1) ...
-%                              - finals(n+(1:n*(n-1)/2),idxRepet,2)).^2)/ ...
-%                  mean( mean(finals(n+(1:n*(n-1)/2), idxRepet, 1).^2) ...
-%                      + mean(finals(n+(1:n*(n-1)/2), idxRepet, 2).^2));
-%   MSEperc(idxRepet,3) = mean( (finals(end-n:end, idxRepet, 1) ...
-%                             - finals(end-n:end, idxRepet, 2)).^2  ) / ...
-%                  mean( mean(finals(end-n:end, idxRepet, 1).^2) ...
-%                      + mean(finals(end-n:end, idxRepet, 2).^2));
-%   for r = 1:2
-%    % compare to average of both estimates   
-%    tmp{r} = bsxfun(@minus, tmp{r}(:,:), mean(finals(:, idxRepet, :),3)).^2; 
-%    % compute average squared distance over all variables of interest
-%    traces{idxRepet, r, idxGroup} = (mean(tmp{r}(idxRange,:),1)' ...
-%                        ./ mean(mean(finals(idxRange,idxRepet,:),3).^2)); 
-%   end 
-%   clear tmp
-%  end
-% end
 
 figureS1 = figure('Tag', 'figS5', 'units','centimeters','position',...
                   [0,0,19,11]);
@@ -283,7 +217,6 @@ xlabel('# of sweeps', 'FontName', fontName, 'FontSize', fontSizeXlabel, ...
 
 end
 %% Quantify gain of Rao-Blackwellising
-%  (figure not to appear in the paper)
 
 % we do two pairs of linear approximations in the log-log space: 
 % 1) two lines with invidivual slopes (log(y) = a1/2 * log(x) + b1/2
@@ -356,8 +289,7 @@ end
 plot(x, exp(logx)./exp(closest1), 'r')
 plot(x, ones(size(logx))*exp((b31-b32)/a3), 'm');   
 
-% that one is a bit of a mess: 
-% I found it way easer to flip the ratios for this case, i.e. this one
+% found it way easer to flip the ratios for this case, i.e. this one
 % plots the number of RB sweeps needed to no-RB-performance. The important
 % value is the ratio of around (roughly) 30% of samples needed. 
 t1 = a1 * logx + b1; % RB
@@ -378,7 +310,7 @@ legend('data', 'closest data', 'linear fits, a_1=a_2', ...
            
 clearvars -except figure42 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight           
            
-%% supplementary figure 2: convergence and quality of K-pairwise model
+%% supplementary figure: convergence and quality of K-pairwise model
 %                          for 10 fits at population size n = 100
 
 figureS1 = figure('Tag', 'figS1', 'units','centimeters','position',...
@@ -567,7 +499,7 @@ set(gca, 'XTickLabel', {'cb', 'nat', 'fff'})
 
 clearvars -except figureS1 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
-%% supplementary figure 3: randomized P(K) and retained criticality
+%% supplementary figure: randomized P(K) and retained criticality
 figureS3 = figure('Tag', 'figS3', 'units','centimeters','position', ...
                   [0,0,19,11]);
 load('fig_data/figS3_data_shuffle.mat')
@@ -644,7 +576,8 @@ ylabel('specific heat', 'FontName', fontName, ...
 
 clearvars -except figureS3 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
-%% supplementary figure 4: c(T) traces for small simulation up to n = 300, with and without beta-bin. approx.
+%% Supplementary figure: c(T) traces for small simulation up to n = 300, 
+%                        with and without beta-bin. approx.
 
 figureS4 = figure('Tag', 'figS4', 'units','centimeters','position',[0,0,19,11]);
 
@@ -706,7 +639,9 @@ ylabel('specific heat', 'FontName', fontName, ...
 
 clearvars -except figureS4 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
-%% Key population statistics (FR, covs, P(K)) as function of temperature
+%% Supplementart figure: Key population statistics (FR, covs, P(K)) 
+%                        as function of temperature
+
 figureS9 = figure('Tag', 'figS8', 'units','centimeters','position',[0,0,19,11]);
 Ts =   [0.8000,    0.8563,    0.9000,    0.9363,    0.9675,    0.9938, ...   
         1.0175,    1.0388,    1.0575,    1.0775,    1.0988,    1.1200, ...
@@ -730,7 +665,8 @@ for i = 1:31
     disp(str)
     str(str=='.') = '_';
     
-    load(['../results/method_validation/specific_heat_samples_long_runs/','longRun100idxRepet1T',str,'.mat']) 
+    load(['../results/method_validation/specific_heat_samples_long_runs/', ...
+          'longRun100idxRepet1T',str,'.mat']) 
     
     subplot(1,3,1)
     plot(Temps(i),mean(50*Efy(1:n)),'.','color',clrs(i,:),'markerSize',10)
@@ -796,7 +732,7 @@ end
 clearvars -except figureS9 axesThickness clrs fontName fontSize fontSizeLegend fontSizeText fontSizeTitle fontSizeXlabel fontSizeYlabel fontWeight
 
 
-%% spatially structured sampling for the full K-pairwise model
+%% Supplementary figure: spatially structured sampling for K-pairwise model
 % Results are stored in '_lin.mat' files under K_pairwise_final/ 
 % We compare with the results for randomly subsampled subpopulations
 
@@ -848,8 +784,8 @@ for i = 1:length(stypes)
     ylabel('c')
 
     subplot(3, 3, 3*i-1);
-    plot(20:20:120, bsxfun(@rdivide, squeeze(varE(2:2:12, :, 6)),(20:20:120)'), ...
-        '-', 'linewidth', 1.5, 'color','k')
+    plot(20:20:120, bsxfun(@rdivide, squeeze(varE(2:2:12, :, 6)), ...
+        (20:20:120)'), '-', 'linewidth', 1.5, 'color','k')
     for n = 2:2:12, 
         plot(10*n, varE(n, :, 6)/(10*n), 's', 'color', clrs(n/2,:), ...
              'markerSize', 6, 'linewidth', 2, 'MarkerFaceColor', clrs(n/2,:));
@@ -921,7 +857,8 @@ for i = 1:length(stypes)
     figure(1)
     subplot(1,3, i);
     for n = 12:-2:2, 
-        plot(Ts, squeeze(varE(n, :, :))/(10*n), '-', 'color', clrs(n/2,:), 'linewidth', 2.5);
+        plot(Ts, squeeze(varE(n, :, :))/(10*n), '-', ...
+             'color', clrs(n/2,:), 'linewidth', 2.5);
         hold on
     end
     %M = 1.1 * max(max(bsxfun(@rdivide, squeeze(max(varE(2:2:12,:,:), [], 2)), (20:20:120)')));
@@ -970,5 +907,198 @@ for i = 1:length(stypes)
     
 end
 
+figure; 
+
+FR = [1.5; 1.5; 1.5; 25]; % Hz
+rho = [0.01; 0.073; 0.3; 0.6];
+rho_shuff = [0.00; 0.00; 0.00; 0.00];
+alphas = 0.001:0.001:1; 
+clrs = hsv(length(FR));
+lgnd = {};
+for j = 1:4
+
+    mu = FR(j) / 50;
+    limitRate = zeros(length(alphas),1);
+    for i = 1:length(alphas);
+      rho_eff = alphas(i)*rho(j) + ( (1-alphas(i)) * rho_shuff(j));
+      a =    mu    * (1/(rho_eff) -1); 
+      b =  (1 -mu) * (1/(rho_eff) -1);
+
+      %disp(['a / (a+b), ', num2str(a/(a+b))])
+      %disp(num2str(rhos(i) * mu * (1-mu)))
+      %disp(num2str(a*b/(a+b)^2/(a+b+1)))
+      %tmp(i) = a*b/(a+b)^2/(a+b+1);
+      limitRate(i) = ( a*(a+1)*psi(1,a+1) + b*(b+1)*psi(1,b+1) )/ ...
+                    ((a+b)*(a+b+1)) - psi(1,a+b+1) + a*b*(psi(0,a+1)- ...
+                      psi(0,b+1))^2/((a+b)^2*(a+b+1));
+                  
+    end
+    plot(alphas, limitRate, '-', 'color', clrs(j,:), 'linewidth', 2)
+    hold on
+    lgnd{j} = [num2str(FR(j)), 'Hz, \rho = ', num2str(rho_eff)];
+end
+legend(lgnd, ...
+    'location', 'Northwest')
+xlabel('\alpha')
+ylabel('c(T=1) / n')
+box off
+title(' c(T=1)/n  prediction for flat model ')
+
+
+%% Supplementary figure: behavior of variance of mean correlation for 
+%                        randomly subsampled populations
+
+N = 100; % full population size 
+% compute correlation matrix
+
+% double exponential drop-off
+sigma2 = 1/8;    % given above numSamples, 
+scale  = 0.2527; % works out empirically to give rho = 0.05 
+f = @(x) scale * exp(-(1/sigma2* x).^2);
+Sigma = f(ones(N,1)*(1:N)/N - (ones(N,1)/N*(1:N))');
+Sigma(logical(diag(ones(N,1)))) = 1;
+
+% random
+%Sigma = randn(N,N) + 0.5;
+%Sigma = (Sigma + Sigma')/2;
+
+% data
+% idxD = 2;
+% load('../results/K_pairwise_final/idxSubsamples_lin')
+% switch idxD
+%     case 1
+%         load('../data/RGC_sim_cb.mat')
+%     case 2
+%         load('../data/RGC_sim_nat.mat')
+%     case 3
+%         load('../data/RGC_sim_fff.mat')        
+% end
+% X = zeros(size(output,1)*size(output,2), N);
+% for i = 1:N, tmp = output(:,:,idxSubsamples{N/10}(i,1)); X(:,i) = tmp(:); end
+% Sigma = corrcoef(X);
+
+%Sigma = 0.05 * ones(N,N)
+
+figure; 
+subplot(1,2,1)
+imagesc(Sigma-diag(diag(Sigma))); 
+set(gca, 'XTick', 20:20:100)
+set(gca, 'YTick', 20:20:100)
+colorbar
+
+% *very* basic approach to computing the correlation matrix summary stats
+S2 = 0; S3 = 0; S4 = 0; 
+c2 = 0; c3 = 0; c4 = 0;
+for j = N:-1:1
+    disp(num2str(j))
+    for i = 1:(j-1)
+        S2 = S2 + Sigma(i,j)^2;
+        c2 = c2 + 1;
+        
+        tmp = 0;
+        for l = 1:(i-1)
+            if l ~= j
+                tmp = tmp + Sigma(i,l);
+                c3 = c3 + 1;
+            end
+        end
+        for k = 1:(j-1)
+            if k ~= i
+                tmp = tmp + Sigma(k,j);
+                c3 = c3 + 1;            
+            end
+        end
+        S3 = S3 + Sigma(i,j) * tmp;
+    end
+end
+
+m = mean(Sigma(logical(triu(ones(N),1))));
+m2 = S2/c2;
+m3 = S3/c3;
+V  = m2 - m^2;
+disp('sum element counts')
+disp('[S2, S3]')
+disp(num2str([c2, c3]))
+
+disp('mean statistics')
+disp('[m2, m3]')
+disp(num2str([m2, m3]))
+
+%%
+idxRep = 100000;    % number of subpops for each size   
+ns = 10:10:N; % sizes of subpopulations that are explored
+
+idxNr = cell(length(ns),1); % index of subpops ('r' for random, 'l' for 
+idxNl = cell(length(ns),1); % linear sampling), should be fixed somewhere
+for n = 1:length(ns)
+    idxNr{n} = zeros(ns(n), idxRep);
+    idxNl{n} = zeros(ns(n), idxRep);
+    for i = 1:idxRep
+        idxNr{n}(:,i) = randsample(N, ns(n));
+        idxNl{n}(:,i) = 1:ns(n);
+    end                                               
+end
+
+tracen = zeros(length(ns),2); 
+  stdn = zeros(length(ns),2);
+disp('subsampling principal submatrices')
+for n = 1:length(ns)
+    tmp = zeros(idxRep,1);
+    for i = 1:idxRep
+        M = Sigma(idxNr{n}(:,i),idxNr{n}(:,i));
+        tmp(i) = mean(M(~logical(diag(ones(ns(n),1)))));
+    end
+    tracen(n,1) = mean(tmp);
+    stdn(n,1)   = std(tmp);
+    for i = 1:idxRep
+        M = Sigma(idxNl{n}(:,i),idxNl{n}(:,i));
+        tmp(i) = mean(M(~logical(diag(ones(ns(n),1)))));
+    end
+    tracen(n,2) = mean(tmp);
+    stdn(n,2)   = std(tmp);
+end
+
+n = 2:N-1;
+g2 = @(n) (1 - N*(N-1)./(n.*(n-1))) * 6 / (N-3) / (N-2);
+g1 = @(n) (1 -   (N-1)./    (n-1) ) * 4 / (N-3);  
+varn = g2(n) .* (V - 4/3*(N-2)/(N-1)*m2)  ...
+    +  g1(n) .* ((N+1)/(N-1) *S2/c2 - N/(N-2) * V  -(n-2)./n.*m3);  
+
+d = 4/(N-3) * (m^2 - m3) - 2/(N-2)/(N-3)*V;
+e = 4*(N+1)/(N-3) * (m3-m^2) + 8/(N-3)/(N-2)*V;
+f = 8*N/(N-3)*(m^2 - m3) + 2*N*(N-5)/(N-2)/(N-3)*V;
+varn2 = d + (e+f./n)./(n-1);
+
+% check special case
+Sig = Sigma(1:N, 1:N);
+disp('difference between var[\rho_{ij}] and var[\rho_2]')
+disp(varn(1) - var(Sig(logical(triu(ones(N,N),1)))))
+disp(varn2(1) - var(Sig(logical(triu(ones(N,N),1)))))
+
+% plot full trace of n's 
+max(abs(varn-varn2))
+subplot(1,2,2)
+semilogy(n, varn2, 'b-', 'linewidth', 2)
+hold on; 
+semilogy([2,ns(1:end-1)], [var(Sig(logical(triu(ones(N,N),1)))); stdn(1:end-1,1).^2], 'ko')
+semilogy(n, 2*varn2(1)./n, 'k-', 'linewidth', 1.5)
+semilogy(n, 2*varn2(1)./(n.*(n-1)), 'k--', 'linewidth', 1.5)
+
+legend('prediction', 'samples', '1/n', '1/n^2')
+ylabel('var[\rho_n]')
+xlabel('n')
+
+subplot(1,2,1)
+loglog(n, varn2, 'b-')
+hold on; 
+loglog([2,ns(1:end-1)], [var(Sig(logical(triu(ones(N,N),1)))); stdn(1:end-1,1).^2], 'ko')
+loglog(n, 2*varn(1)./(n.*(n-1)), 'r-', 'linewidth', 1.5)
+loglog(n, 2*varn(1)./n, 'k-', 'linewidth', 1.5)
+loglog(n, 4*varn(1)./n.^2, 'k--', 'linewidth', 1.5)
+loglog(n, 8*varn(1)./n.^3, 'k--', 'linewidth', 1)
+semilogy(n, varn, 'c--')
+legend('prediction', 'empirical', 'ind. pred.', 'ind. w. repl.', 'ind. without repl.', '1/n', '1/n^2', '1/n^3')
+title('var[\rho_n]')
+xlabel('n')
 
 
