@@ -21,5 +21,4 @@ This repository also contains the code used to generate the activity of our simp
 We	are	in	the	process	of	preparing	a	well	documented	toolbox	which	implements	
 the	statistical	methods	and	algorithms	used	in	the	project,	so	that	they	can	be	
 used	 more	 widely	 and	 generally.	 This	 code	 will	 be	 made	 available	 at	
-www.mackelab.org/code,	and	at	https://github.com/mackelab/pop_spike.
-.	
+www.mackelab.org/code,	and	at https://github.com/mackelab/CorBinian/.	
