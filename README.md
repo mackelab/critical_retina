@@ -13,7 +13,6 @@ We	 have	 additionally	 uploaded	 the	 simulated	 data,	 source	 files	 with	 an
 
 The data and results files were uploaded using Git Large File Storage (https://git-lfs.github.com/).  Downloading the .mat and .gc files from this repository requires to install Git LFS. 
 
-During the project, we generated long Markov Chain Monte Carlo runs that were used to gauge the gain in sampling effeciency obtained from Rao-Blackwellizing the Monte Carlo sampler. This repository only contains data on the quantified gain (i.e. the root mean square errors (RMSEs) referred to in the manuscript). The raw files for these MC samples (~ 4.2 GB) can be found on our lab dropbox at
-https://www.dropbox.com/sh/ytogs5xdz2q47ab/AABMb_X9dOuRGy0je_BTxJj8a?dl=0
+During the project, we generated long Markov Chain Monte Carlo runs that were used to gauge the gain in sampling effeciency obtained from Rao-Blackwellizing the Monte Carlo sampler. This repository only contains data on the quantified gain (i.e. the root mean square errors (RMSEs) referred to in the manuscript) computed from the sampled Monte Carlo chains, but not the raw Monte Carlo chains themselves (~4GB).
 
 This repository also contains the code used to generate the activity of our simple simulated population of retinal ganglion cells, found under "data/data_generation/". This code can be readily used to generate additional simulated activity. 
